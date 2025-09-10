@@ -39,3 +39,10 @@
 
 # debug information files
 *.dwo
+
+build/
+
+data/*
+
+*.avi
+*.mp4
