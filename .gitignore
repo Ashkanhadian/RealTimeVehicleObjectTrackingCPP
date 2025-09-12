@@ -44,5 +44,11 @@ build/
 
 data/
 
+models/
+
+*.onnx
+*.pt
+
 *.avi
 *.mp4
+*.mov

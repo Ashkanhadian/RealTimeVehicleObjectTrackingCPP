@@ -28,11 +28,11 @@ add_executable(RealTimeVehicleObjectTrackingCPP
     src/main.cpp
     src/hungarian.cpp
     src/kalman_filter.cpp
-    src/nn.cpp
+    src/yolo_detector.cpp
     src/utils.cpp
     include/hungarian.hpp
     include/kalman_filter.hpp
-    include/nn.hpp
+    include/yolo_detector.hpp
 )
 
 # ==================================================
