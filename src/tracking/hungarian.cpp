@@ -1,20 +1,20 @@
 #include "../../include/tracking/hungarian.hpp"
-#include <limits>
 #include <algorithm>
+#include <limits>
+#include <vector>
+#include <functional>
 
-std::vector<int> HungarianAlgorithm::solve(const cv::Mat& cost_matrix) {
+[[nodiscard]] std::vector<int> HungarianAlgorithm::solve(const cv::Mat& cost_matrix)
+{
     if (cost_matrix.empty()) return {};
     
-    int n = cost_matrix.rows;
-    int m = cost_matrix.cols;
+    const int n = cost_matrix.rows;
+    const int m = cost_matrix.cols;
     
     // Create a copy of the cost matrix
     cv::Mat cost = cost_matrix.clone();
     
-    // Convert minimization problem to maximization if needed
-    convert_cost_matrix(cost);
-    
-    // Initialize mask matrix
+    // Initialize mask matrix (0: no assignment, 1: starred, 2: primed)
     cv::Mat mask = cv::Mat::zeros(n, m, CV_8S);
     
     // Initialize row and column covers
@@ -28,11 +28,11 @@ std::vector<int> HungarianAlgorithm::solve(const cv::Mat& cost_matrix) {
     while (step != -1) {
         switch (step) {
             case 1: step1(step, cost); break;
-            case 2: step2(step, cost); break;
-            case 3: step3(step, mask, row_cover, col_cover, cost); break;
-            case 4: step4(step, mask, row_cover, col_cover, cost, row, col); break;
-            case 5: step5(step, mask, row_cover, col_cover, cost); break;
-            case 6: step6(step, cost); break;
+            case 2: step2(step, cost, mask, row_cover, col_cover); break;
+            case 3: step3(step, mask, col_cover); break;
+            case 4: step4(step, cost, mask, row_cover, col_cover, row, col); break;
+            case 5: step5(step, mask, row_cover, col_cover); break;
+            case 6: step6(step, cost, row_cover, col_cover); break;
             default: step = -1; break;
         }
     }
@@ -51,7 +51,22 @@ std::vector<int> HungarianAlgorithm::solve(const cv::Mat& cost_matrix) {
     return assignments;
 }
 
-// Implementation of the steps would follow here...
-// [Note: The complete implementation of all steps would be quite lengthy.
-// For brevity, I'm showing the structure. The full implementation would
-// include all the Hungarian algorithm steps with proper matrix operations.]
+void HungarianAlgorithm::step1(int& step, cv::Mat& cost_matrix)
+{
+    // Subtract row minima
+    for (int i = 0; i < cost_matrix.rows; ++i)
+    {
+        double min_val;
+        cv::minMaxLoc(cost_matrix.row(i), &min_val);
+        cost_matrix.row(i) -= min_val;
+    }
+    step = 2;
+}
+
+void HungarianAlgorithm::step2
+(
+    int& step, 
+    const cv::Mat& cost_matrix,
+    cv::Mat& mask,
+    cv::Mat& row_cover, cv::Mat& col_cover
+)
