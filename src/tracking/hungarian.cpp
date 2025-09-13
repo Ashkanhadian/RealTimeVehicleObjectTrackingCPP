@@ -93,3 +93,103 @@ void HungarianAlgorithm::step2
     col_cover.setTo(0);
     step = 3;
 }
+
+void HungarianAlgorithm::step3
+(
+    int& step,
+    const cv::Mat& mask,
+    cv::Mat& col_cover
+)
+{
+    int col_count = 0;
+    for (int i = 0; i < mask.rows; ++i)
+    {
+        for (int j = 0; j < mask.cols; ++j)
+        {
+            if (mask.at<char>(i, j) == 1)
+            {
+                col_cover.at<char>(j) = 1;
+                col_count++;
+            }
+        }
+    }
+
+    step = (col_count >= mask.rows) ? -1 : 4;
+}
+
+void HungarianAlgorithm::step4
+(
+    int& step,
+    const cv::Mat& cost_matrix,
+    cv::Mat& mask,
+    cv::Mat& row_cover,
+    cv::Mat& col_cover,
+    int& row,
+    int& col
+)
+{
+    // Find a non-covered zero and prime it
+    if (find_a_zero(row, col, cost_matrix, row_cover, col_cover))
+    {
+        mask.at<char>(row, col) = 2;
+        
+        if (star_in_row(row, mask))
+        {
+            find_star_in_row(row, col, mask);
+            row_cover.at<char>(row) = 1;
+            col_cover.at<char>(col) = 0;
+            step = 4;
+        } else
+        {
+            step = 5;
+        }
+    } else
+    {
+        step = 6;
+    }
+}
+
+[[nodiscard]] bool HungarianAlgorithm::find_a_zero
+(
+    int& row,
+    int& col,
+    const cv::Mat& cost_matrix,
+    const cv::Mat& row_cover,
+    const cv::Mat& col_cover
+)
+{
+    row = -1;
+    col = -1;
+
+    for (int i = 0; i < cost_matrix.rows; ++i)
+    {
+        if (row_cover.at<char>(i) == 0)
+        {
+            for (int j = 0; j < cost_matrix.cols; ++j)
+            {
+                if (col_cover.at<char>(j) == 0 && cost_matrix.at<float>(i, j) == 0)
+                {
+                    row = i;
+                    col = j;
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+[[nodiscard]] bool HungarianAlgorithm::star_in_row
+(
+    int row,
+    const cv::Mat& mask_matrix
+)
+{
+    for (int j = 0; j < mask_matrix.cols; ++j)
+    {
+        if (mask_matrix.at<char>(row, j) == 1)
+            return true;
+    }
+    return false;
+}

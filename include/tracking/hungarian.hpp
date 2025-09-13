@@ -24,7 +24,7 @@ class HungarianAlgorithm
                    cv::Mat& col_cover);
 
         void step4(int& step, 
-                   cv::Mat& cost_matrix,
+                   const cv::Mat& cost_matrix,
                    cv::Mat& mask,
                    cv::Mat& row_cover,
                    cv::Mat& col_cover,
@@ -41,7 +41,7 @@ class HungarianAlgorithm
                    const cv::Mat& row_cover,
                    const cv::Mat& col_cover);
 
-        void find_a_zero(int& row, 
+        [[nodiscard]] bool find_a_zero(int& row, 
                          int& col, 
                          const cv::Mat& cost_matrix, 
                          const cv::Mat& row_cover, 
