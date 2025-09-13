@@ -9,6 +9,7 @@ find_package(OpenCV REQUIRED COMPONENTS
     core
     highgui
     imgproc
+    dnn
     cudaarithm
     cudabgsegm
     cudafilters
@@ -16,9 +17,21 @@ find_package(OpenCV REQUIRED COMPONENTS
     cudawarping
 )
 
-# Verify OpenCV was built with CUDA support
-if(NOT OpenCV_HAVE_CUDA)
-    message(WARNING "OpenCV was not built with CUDA support.")
+# Find OpenCV with CUDA support
+find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc dnn)
+
+if(OpenCV_FOUND)
+    message(STATUS "OpenCV version: ${OpenCV_VERSION}")
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    
+    # Check if CUDA is available
+    if(OpenCV_CUDA_VERSION)
+        message(STATUS "CUDA support detected in OpenCV: ${OpenCV_CUDA_VERSION}")
+    else()
+        message(WARNING "OpenCV was compiled without CUDA support")
+    endif()
+else()
+    message(FATAL_ERROR "OpenCV not found")
 endif()
 
 # ==================================================
@@ -26,13 +39,11 @@ endif()
 # ==================================================
 add_executable(RealTimeVehicleObjectTrackingCPP
     src/main.cpp
-    src/hungarian.cpp
-    src/kalman_filter.cpp
-    src/yolo_detector.cpp
-    src/utils.cpp
-    include/hungarian.hpp
-    include/kalman_filter.hpp
-    include/yolo_detector.hpp
+    src/yolov5x/yolo_detector.cpp
+    src/tracking/hungarian.cpp
+    src/tracking/kalman_filter.cpp
+    src/tracking/track.cpp
+    src/tracking/tracker.cpp
 )
 
 # ==================================================
