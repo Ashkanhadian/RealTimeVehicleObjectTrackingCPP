@@ -68,5 +68,28 @@ void HungarianAlgorithm::step2
     int& step, 
     const cv::Mat& cost_matrix,
     cv::Mat& mask,
-    cv::Mat& row_cover, cv::Mat& col_cover
+    cv::Mat& row_cover, 
+    cv::Mat& col_cover
 )
+{
+    for (int i = 0; i < cost_matrix.rows; ++i)
+    {
+        for (int j = 0; j < cost_matrix.cols; ++j)
+        {
+            if (
+                cost_matrix.at<float>(i, j) == 0 && 
+                row_cover.at<char>(i) == 0 &&
+                col_cover.at<char>(j) == 0
+            )
+            {
+                mask.at<char>(i, j) = 1;
+                row_cover.at<char>(i) = 1;
+                col_cover.at<char>(j) = 1;
+            }
+        }
+    }
+
+    row_cover.setTo(0);
+    col_cover.setTo(0);
+    step = 3;
+}
