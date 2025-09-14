@@ -48,6 +48,8 @@ models/
 
 bin/
 
+lib/
+
 *.onnx
 *.pt
 
