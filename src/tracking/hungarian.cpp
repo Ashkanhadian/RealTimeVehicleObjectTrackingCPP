@@ -129,7 +129,7 @@ void HungarianAlgorithm::step4
 )
 {
     // Find a non-covered zero and prime it
-    if (find_a_zero(row, col, cost_matrix, row_cover, col_cover))
+    if (found_a_zero(row, col, cost_matrix, row_cover, col_cover))
     {
         mask.at<char>(row, col) = 2;
         
@@ -149,7 +149,119 @@ void HungarianAlgorithm::step4
     }
 }
 
-[[nodiscard]] bool HungarianAlgorithm::find_a_zero
+void HungarianAlgorithm::step5
+(
+    int& step,
+    cv::Mat& mask,
+    cv::Mat& row_cover,
+    cv::Mat& col_cover
+)
+{
+    // Construct a series of alternating primed and starred zeros
+    std::vector<cv::Point> path;
+    int row = -1, col = -1;
+
+    // Find a initial primed zero
+    for (int i = 0; i < mask.rows; ++i)
+    {
+        for (int j = 0; j < mask.cols; ++j)
+        {
+            if (mask.at<char>(i, j) == 2)
+            {
+                path.emplace_back(j, i);
+                break;
+            }
+        }
+    }
+
+    // Follow the path of alternating primed and starred zeros
+    while (true)
+    {
+        // Find starred zero in the same column
+        if (star_in_col(path.back().x, mask))
+        {
+            find_star_in_row(path.back().y, col, mask);
+            path.emplace_back(col, path.back().y);
+        } else {
+            break;
+        }
+    }
+
+    // Augment the path
+    for (const auto& p : path)
+    {
+        if (mask.at<char>(p.y, p.x) == 1)
+        {
+            mask.at<char>(p.y, p.x) = 0;
+        } else {
+            mask.at<char>(p.y, p.x) = 1;
+        }
+    }
+
+    // Reset covers and primes
+    row_cover.setTo(0);
+    col_cover.setTo(0);
+
+    // Earase all primes
+    for (int i = 0; i < mask.rows; ++i)
+    {
+        for (int j = 0; j < mask.cols; ++j)
+        {
+            if (mask.at<char>(i, j) == 2)
+            {
+                mask.at<char>(i, j) = 0;
+            }
+        }
+    }
+
+    step = 3;
+}
+
+void HungarianAlgorithm::step6
+(
+    int& step,
+    cv::Mat& cost_matrix,
+    const cv::Mat& row_cover,
+    const cv::Mat& col_cover
+)
+{
+    // Find the minimum uncovered value
+    float min_val = std::numeric_limits<float>::max();
+
+    for (int i = 0; i < cost_matrix.rows; ++i)
+    {
+        for (int j = 0; j < cost_matrix.cols; ++j)
+        {
+            if (row_cover.at<char>(i) == 0 && col_cover.at<char>(j) == 0)
+            {
+                if (cost_matrix.at<float>(i, j) < min_val)
+                {
+                    min_val = cost_matrix.at<float>(i, j);
+                }
+            }
+        }
+    }
+
+    // Add the minimum value to covered rows and subtract it from uncovered columns
+    for (int i = 0; i < cost_matrix.rows; ++i)
+    {
+        for (int j = 0; j < cost_matrix.cols; ++j)
+        {
+            if (row_cover.at<char>(i) == 1)
+            {
+                cost_matrix.at<float>(i, j) += min_val;
+            }
+            if (col_cover.at<char>(j) == 0)
+            {
+                cost_matrix.at<float>(i, j) -= min_val;
+            }
+        }
+    }
+
+    step = 4;
+}
+
+[[nodiscard]] bool HungarianAlgorithm::found_a_zero
 (
     int& row,
     int& col,
@@ -192,4 +304,56 @@ void HungarianAlgorithm::step4
             return true;
     }
     return false;
+}
+
+void HungarianAlgorithm::find_star_in_row
+(
+    int row,
+    int& col,
+    const cv::Mat& mask_matrix
+)
+{
+    col = -1;
+    for (int j = 0; j < mask_matrix.cols; ++j)
+    {
+        if (mask_matrix.at<char>(row, j) == 1)
+        {
+            col = j;
+            return;
+        }
+    }
+}
+
+[[nodiscard]] bool HungarianAlgorithm::star_in_col
+(
+    int col,
+    const cv::Mat& mask_matrix
+)
+{
+    for (int i = 0; i < mask_matrix.rows; ++i)
+    {
+        if (mask_matrix.at<char>(i, col) == 1)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void HungarianAlgorithm::find_star_in_col
+(
+    int col,
+    int& row,
+    const cv::Mat& mask_matrix
+)
+{
+    row = -1;
+    for (int i = 0; i < mask_matrix.rows; ++i)
+    {
+        if (mask_matrix.at<char>(i, col) == 1)
+        {
+            row = i;
+            return;
+        }
+    }
 }
