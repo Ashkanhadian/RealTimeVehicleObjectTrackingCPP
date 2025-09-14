@@ -17,9 +17,21 @@ YOLODetector::YOLODetector(const std::string& model_path,
     net_ = cv::dnn::readNetFromONNX(model_path);
     
     // Set backend
-    if (device_type == DeviceType::CUDA && device::is_cuda_available()) {
-        net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-        net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+    if (device_type == DeviceType::CUDA) {
+        try {
+            if (cv::cuda::getCudaEnabledDeviceCount() > 0) {
+                net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+                net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+                std::cout << "Using CUDA backend" << std::endl;
+            } else {
+                throw std::runtime_error("No CUDA devices available");
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "CUDA error: " << e.what() << ", falling back to CPU" << std::endl;
+            net_.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+            net_.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+            device_type_ = DeviceType::CPU;
+        }
     } else {
         net_.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
         net_.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
@@ -109,7 +121,10 @@ std::vector<Detection> YOLODetector::parse_detections(const cv::Mat& frame,
 }
 
 std::vector<Detection> YOLODetector::detect(cv::Mat& frame) {
-    auto input_image = format_yolov5(frame);
+    cv::Mat resized_frame;
+    cv::resize(frame, resized_frame, cv::Size(640, 360));
+    
+    auto input_image = format_yolov5(resized_frame);
     
     // Create blob from image
     cv::Mat blob;

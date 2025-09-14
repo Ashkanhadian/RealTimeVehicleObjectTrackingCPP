@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+#include <opencv2/cudaimgproc.hpp>
 #include <iostream>
 #include <chrono>
 #include "../include/yolov5x/yolo_detector.hpp"
@@ -31,7 +32,7 @@ int main(int argc, char* argv[]) {
     }
     
     // Initialize YOLO detector
-    YOLODetector detector("models/yolov5x.onnx", device_type, conf_threshold);
+    YOLODetector detector("C:\\Users\\admin\\Desktop\\Projects\\RealTimeVehicleObjectTrackingCPP\\models\\yolov5s.onnx", device_type, conf_threshold);
     
     // Initialize tracker
     Tracker tracker(iou_threshold);
