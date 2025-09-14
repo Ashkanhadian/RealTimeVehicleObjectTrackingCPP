@@ -23,8 +23,18 @@ std::vector<Track> Tracker::update(const std::vector<Detection>& detections) {
     std::vector<int> unmatched_tracks;
     
     if (!cost_matrix.empty()) {
+        // Convert cost matrix to cv::Mat
+        cv::Mat cost_mat(cost_matrix.size(), cost_matrix[0].size(), CV_32F);
+        for (size_t i = 0; i < cost_matrix.size(); ++i)
+        {
+            for (size_t j = 0; j < cost_matrix.size(); ++j)
+            {
+                cost_mat.at<float>(i, j) = cost_matrix[i][j];
+            }
+        }
+
         // Use Hungarian algorithm for assignment
-        assignment = hungarian_.solve(cv::Mat(cost_matrix));
+        assignment = hungarian_.solve(cost_mat);
         associate_detections_to_tracks(detections, cost_matrix, assignment, 
                                       unmatched_detections, unmatched_tracks);
     } else {

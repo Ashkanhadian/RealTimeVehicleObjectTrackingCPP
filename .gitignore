@@ -46,6 +46,8 @@ data/
 
 models/
 
+bin/
+
 *.onnx
 *.pt
 
