@@ -4,7 +4,7 @@ project(RealTimeVehicleObjectTrackingCPP LANGUAGES CXX)
 # ==================================================
 # Find OpenCV with CUDA support
 # ==================================================
-set(OpenCV_DIR "C:/OpenCV/4.9.0_CUDA/x64/vc17/lib")
+set(OpenCV_DIR "C:/OpenCV-4.12.0/x64/vc17/lib")
 find_package(OpenCV REQUIRED COMPONENTS
     core
     highgui

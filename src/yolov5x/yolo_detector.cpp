@@ -14,28 +14,38 @@ YOLODetector::YOLODetector(const std::string& model_path,
       device_type_(device_type) {
     
     // Load network
-    net_ = cv::dnn::readNetFromONNX(model_path);
+    try {
+        // Load network
+        net_ = cv::dnn::readNetFromONNX(model_path);
+    } catch (const std::exception& e) {
+        std::cerr << "Error loading model: " << e.what() << std::endl;
+        throw;
+    }
     
     // Set backend
-    if (device_type == DeviceType::CUDA) {
-        try {
-            if (cv::cuda::getCudaEnabledDeviceCount() > 0) {
-                net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-                net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
-                std::cout << "Using CUDA backend" << std::endl;
-            } else {
-                throw std::runtime_error("No CUDA devices available");
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "CUDA error: " << e.what() << ", falling back to CPU" << std::endl;
-            net_.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-            net_.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
-            device_type_ = DeviceType::CPU;
+    std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> availableBackends = cv::dnn::getAvailableBackends();
+    bool cudaBackendAvailable = false;
+    for (const auto& pair : availableBackends) {
+        if (pair.first == cv::dnn::DNN_BACKEND_CUDA && pair.second == cv::dnn::DNN_TARGET_CUDA) {
+            cudaBackendAvailable = true;
+            break;
         }
+    }
+    std::cout << "CUDA BACKEND AVAILABLITY: " << cudaBackendAvailable << std::endl;
+
+    // Set backend based on availability, not just request
+    if (device_type == DeviceType::CUDA && cudaBackendAvailable) {
+        net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+        net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+        std::cout << "Using CUDA backend" << std::endl;
     } else {
+        if (device_type == DeviceType::CUDA) {
+            std::cerr << "CUDA backend requested but not available. Falling back to CPU." << std::endl;
+        }
         net_.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
         net_.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
         device_type_ = DeviceType::CPU;
+        std::cout << "Using CPU backend" << std::endl;
     }
     
     // Load COCO class names
@@ -120,11 +130,9 @@ std::vector<Detection> YOLODetector::parse_detections(const cv::Mat& frame,
     return detections;
 }
 
-std::vector<Detection> YOLODetector::detect(cv::Mat& frame) {
-    cv::Mat resized_frame;
-    cv::resize(frame, resized_frame, cv::Size(640, 360));
-    
-    auto input_image = format_yolov5(resized_frame);
+std::vector<Detection> YOLODetector::detect(cv::Mat& frame)
+{
+    auto input_image = format_yolov5(frame);
     
     // Create blob from image
     cv::Mat blob;

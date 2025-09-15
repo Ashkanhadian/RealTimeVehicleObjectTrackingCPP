@@ -39,12 +39,13 @@ int main(int argc, char* argv[]) {
     
     // Open video capture
     cv::VideoCapture cap(video_path);
-    if (!cap.isOpened()) {
-        cap.open(0); // Try webcam
-        if (!cap.isOpened()) {
-            std::cerr << "Error opening video stream or camera" << std::endl;
-            return -1;
-        }
+    if (!cap.isOpened()) 
+    {
+        // cap.open(0); // Try webcam
+        // if (!cap.isOpened()) {
+        std::cerr << "Error opening video stream or camera" << std::endl;
+        return -1;
+        // }
     }
     
     // Get video properties
@@ -64,7 +65,13 @@ int main(int argc, char* argv[]) {
     
     while (true) {
         cap >> frame;
-        if (frame.empty()) break;
+        if (frame.empty())
+        {
+            std::cout << "Frame is empty" << std::endl;
+            break;
+        }
+
+        std::cout << "Processing frame" << std::endl;
         
         // Detect objects
         auto detections = detector.detect(frame);
