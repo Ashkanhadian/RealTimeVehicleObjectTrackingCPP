@@ -23,7 +23,11 @@ namespace device
 
     inline bool is_cuda_available()
     {
+        #ifdef HAVE_CUDA
         return cv::cuda::getCudaEnabledDeviceCount() > 0;
+        #else
+        return false;
+        #endif
     }
 
     inline DeviceType auto_select()

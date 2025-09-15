@@ -17,18 +17,17 @@ find_package(OpenCV REQUIRED COMPONENTS
     cudawarping
 )
 
-# Find OpenCV with CUDA support
-# find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc dnn)
-
 if(OpenCV_FOUND)
     message(STATUS "OpenCV version: ${OpenCV_VERSION}")
     include_directories(${OpenCV_INCLUDE_DIRS})
     
     # Check if CUDA is available
-    if(OpenCV_CUDA_VERSION)
-        message(STATUS "CUDA support detected in OpenCV: ${OpenCV_CUDA_VERSION}")
+    if(OpenCV_HAVE_CUDA)
+        message(STATUS "CUDA support detected in OpenCV")
+        add_definitions(-DHAVE_CUDA=1)
     else()
         message(WARNING "OpenCV was compiled without CUDA support")
+        add_definitions(-DHAVE_CUDA=0)
     endif()
 else()
     message(FATAL_ERROR "OpenCV not found")

@@ -31,98 +31,125 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    // Initialize YOLO detector
-    YOLODetector detector("C:\\Users\\admin\\Desktop\\Projects\\RealTimeVehicleObjectTrackingCPP\\models\\yolov5s.onnx", device_type, conf_threshold);
-    
-    // Initialize tracker
-    Tracker tracker(iou_threshold);
-    
-    // Open video capture
-    cv::VideoCapture cap(video_path);
-    if (!cap.isOpened()) 
-    {
-        // cap.open(0); // Try webcam
-        // if (!cap.isOpened()) {
-        std::cerr << "Error opening video stream or camera" << std::endl;
-        return -1;
-        // }
-    }
-    
-    // Get video properties
-    int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
-    int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-    double fps = cap.get(cv::CAP_PROP_FPS);
-    
-    std::cout << "Video resolution: " << frame_width << "x" << frame_height << std::endl;
-    std::cout << "Video FPS: " << fps << std::endl;
-    std::cout << "Using device: " << device::to_string(detector.device_type()) << std::endl;
-    std::cout << "Confidence threshold: " << conf_threshold << std::endl;
-    std::cout << "IOU threshold: " << iou_threshold << std::endl;
-    
-    cv::Mat frame;
-    auto last_time = std::chrono::high_resolution_clock::now();
-    int frame_count = 0;
-    
-    while (true) {
-        cap >> frame;
-        if (frame.empty())
+    try {
+        // Initialize YOLO detector
+        std::cout << "Initializing YOLO detector..." << std::endl;
+        YOLODetector detector("C:\\Users\\admin\\Desktop\\Projects\\RealTimeVehicleObjectTrackingCPP\\models\\yolov5s.onnx", 
+                             device_type, conf_threshold);
+        
+        // Initialize tracker
+        std::cout << "Initializing tracker..." << std::endl;
+        Tracker tracker(iou_threshold);
+        
+        // Open video capture
+        std::cout << "Opening video: " << video_path << std::endl;
+        cv::VideoCapture cap(video_path);
+        if (!cap.isOpened()) 
         {
-            std::cout << "Frame is empty" << std::endl;
-            break;
+            std::cerr << "Error opening video stream: " << video_path << std::endl;
+            return -1;
         }
+        
+        // Get video properties
+        int frame_width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+        int frame_height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+        double fps = cap.get(cv::CAP_PROP_FPS);
+        
+        std::cout << "Video resolution: " << frame_width << "x" << frame_height << std::endl;
+        std::cout << "Video FPS: " << fps << std::endl;
+        std::cout << "Using device: " << device::to_string(detector.device_type()) << std::endl;
+        std::cout << "Confidence threshold: " << conf_threshold << std::endl;
+        std::cout << "IOU threshold: " << iou_threshold << std::endl;
+        
+        cv::Mat frame;
+        auto last_time = std::chrono::high_resolution_clock::now();
+        int frame_count = 0;
+        
+        std::cout << "Starting video processing..." << std::endl;
+        
+        while (true) {
+            try {
+                cap >> frame;
+                if (frame.empty())
+                {
+                    std::cout << "End of video stream" << std::endl;
+                    break;
+                }
 
-        std::cout << "Processing frame" << std::endl;
-        
-        // Detect objects
-        auto detections = detector.detect(frame);
-        
-        // Update tracker
-        auto tracks = tracker.update(detections);
-        
-        // Draw tracks
-        for (const auto& track : tracks) {
-            auto box = track.current_bbox();
-            cv::rectangle(frame, box, cv::Scalar(0, 255, 0), 2);
-            
-            std::string label = "ID: " + std::to_string(track.id());
-            cv::putText(frame, label, cv::Point(box.x, box.y - 5),
-                       cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+                std::cout << "Processing frame " << frame_count << std::endl;
+                
+                // Detect objects
+                auto detections = detector.detect(frame);
+                std::cout << "Detected " << detections.size() << " objects" << std::endl;
+                
+                // Update tracker
+                auto tracks = tracker.update(detections);
+                std::cout << "Tracking " << tracks.size() << " objects" << std::endl;
+                
+                // Draw tracks
+                for (const auto& track : tracks) {
+                    auto box = track.current_bbox();
+                    cv::rectangle(frame, box, cv::Scalar(0, 255, 0), 2);
+                    
+                    std::string label = "ID: " + std::to_string(track.id());
+                    cv::putText(frame, label, cv::Point(box.x, box.y - 5),
+                               cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+                }
+                
+                // Calculate and display FPS
+                frame_count++;
+                auto current_time = std::chrono::high_resolution_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_time).count();
+                
+                if (elapsed >= 1) {
+                    double current_fps = frame_count / static_cast<double>(elapsed);
+                    std::string fps_text = "FPS: " + std::to_string(current_fps).substr(0, 4);
+                    cv::putText(frame, fps_text, cv::Point(10, 30), 
+                               cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
+                    
+                    // Reset counters
+                    frame_count = 0;
+                    last_time = current_time;
+                }
+                
+                // Display device info
+                std::string device_text = "Device: " + device::to_string(detector.device_type());
+                cv::putText(frame, device_text, cv::Point(10, 70), 
+                           cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
+                
+                // Display track count
+                std::string track_text = "Tracks: " + std::to_string(tracks.size());
+                cv::putText(frame, track_text, cv::Point(10, 110), 
+                           cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
+                
+                // Display result
+                cv::imshow("YOLOv5 Vehicle Tracking", frame);
+                
+                // Reset CUDA device periodically to prevent memory issues
+                if (device_type == DeviceType::CUDA && frame_count % 10 == 0) {
+                    cv::cuda::resetDevice();
+                    std::cout << "CUDA device reset" << std::endl;
+                }
+                
+                // Handle keyboard input
+                int key = cv::waitKey(1);
+                if (key == 27) break; // ESC to exit
+                else if (key == 'p') cv::waitKey(0); // Pause
+                
+            } catch (const std::exception& e) {
+                std::cerr << "Error processing frame: " << e.what() << std::endl;
+                // Reset CUDA device on error
+                if (device_type == DeviceType::CUDA) {
+                    cv::cuda::resetDevice();
+                    std::cout << "CUDA device reset after error" << std::endl;
+                }
+            }
         }
-        
-        // Calculate and display FPS
-        frame_count++;
-        auto current_time = std::chrono::high_resolution_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_time).count();
-        
-        if (elapsed >= 1) {
-            double fps = frame_count / static_cast<double>(elapsed);
-            std::string fps_text = "FPS: " + std::to_string(fps).substr(0, 4);
-            cv::putText(frame, fps_text, cv::Point(10, 30), 
-                       cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2);
-            
-            // Reset counters
-            frame_count = 0;
-            last_time = current_time;
-        }
-        
-        // Display device info
-        std::string device_text = "Device: " + device::to_string(detector.device_type());
-        cv::putText(frame, device_text, cv::Point(10, 70), 
-                   cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
-        
-        // Display track count
-        std::string track_text = "Tracks: " + std::to_string(tracks.size());
-        cv::putText(frame, track_text, cv::Point(10, 110), 
-                   cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
-        
-        // Display result
-        cv::imshow("YOLOv5 Vehicle Tracking", frame);
-        
-        // Handle keyboard input
-        int key = cv::waitKey(1);
-        if (key == 27) break; // ESC to exit
-        else if (key == 'p') cv::waitKey(0); // Pause
+    } catch (const std::exception& e) {
+        std::cerr << "Initialization error: " << e.what() << std::endl;
+        return -1;
     }
     
+    std::cout << "Program completed successfully" << std::endl;
     return 0;
 }

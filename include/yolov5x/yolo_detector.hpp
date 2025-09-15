@@ -16,6 +16,11 @@ public:
     
     std::vector<Detection> detect(cv::Mat& frame);
     void draw_detections(cv::Mat& frame, std::vector<Detection>& detections);
+    void resetDevice()
+    {
+        if (device_type_ == DeviceType::CUDA)
+            cv::cuda::resetDevice();
+    }
     DeviceType device_type() const { return device_type_; }
     
 private:

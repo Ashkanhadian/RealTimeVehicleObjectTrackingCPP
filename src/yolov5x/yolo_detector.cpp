@@ -1,6 +1,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <opencv2/cudaarithm.hpp>
 
 #include "../../include/yolov5x/yolo_detector.hpp"
 #include "../../include/device_type.hpp"
@@ -23,6 +24,7 @@ YOLODetector::YOLODetector(const std::string& model_path,
     }
     
     // Set backend
+    // In the YOLODetector constructor, replace the backend availability check:
     std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> availableBackends = cv::dnn::getAvailableBackends();
     bool cudaBackendAvailable = false;
     for (const auto& pair : availableBackends) {
@@ -31,14 +33,17 @@ YOLODetector::YOLODetector(const std::string& model_path,
             break;
         }
     }
-    std::cout << "CUDA BACKEND AVAILABLITY: " << cudaBackendAvailable << std::endl;
 
-    // Set backend based on availability, not just request
+    // Check if CUDA is actually available, not just requested
+    #ifdef HAVE_CUDA
     if (device_type == DeviceType::CUDA && cudaBackendAvailable) {
         net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
         net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
         std::cout << "Using CUDA backend" << std::endl;
     } else {
+    #else
+    {
+    #endif
         if (device_type == DeviceType::CUDA) {
             std::cerr << "CUDA backend requested but not available. Falling back to CPU." << std::endl;
         }
@@ -132,21 +137,29 @@ std::vector<Detection> YOLODetector::parse_detections(const cv::Mat& frame,
 
 std::vector<Detection> YOLODetector::detect(cv::Mat& frame)
 {
-    auto input_image = format_yolov5(frame);
-    
-    // Create blob from image
-    cv::Mat blob;
-    cv::dnn::blobFromImage(input_image, blob, 1./255., 
-                          cv::Size(input_width_, input_height_), 
-                          cv::Scalar(), true, false);
-    
-    net_.setInput(blob);
-    
-    // Forward pass
-    std::vector<cv::Mat> outputs;
-    net_.forward(outputs, net_.getUnconnectedOutLayersNames());
-    
-    return parse_detections(frame, outputs);
+    try {
+        auto input_image = format_yolov5(frame);
+        
+        // Create blob from image
+        cv::Mat blob;
+        cv::dnn::blobFromImage(input_image, blob, 1./255., 
+                              cv::Size(input_width_, input_height_), 
+                              cv::Scalar(), true, false);
+        
+        net_.setInput(blob);
+        
+        // Forward pass
+        std::vector<cv::Mat> outputs;
+        net_.forward(outputs, net_.getUnconnectedOutLayersNames());
+        
+        return parse_detections(frame, outputs);
+    } catch (const std::exception& e) {
+        std::cerr << "Detection error: " << e.what() << std::endl;
+        if (device_type_ == DeviceType::CUDA) {
+            cv::cuda::resetDevice();
+        }
+        return {};
+    }
 }
 
 void YOLODetector::draw_detections(cv::Mat& frame, std::vector<Detection>& detections) {
