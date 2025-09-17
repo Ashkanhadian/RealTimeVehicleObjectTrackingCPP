@@ -17,10 +17,11 @@ KalmanFilter::KalmanFilter(const Detection& initial_detection)
 void KalmanFilter::init(const Detection& initial_detection)
 {
     // Initialize state with detection
-    kf_.statePost.at<float>(0) = initial_detection.bbox.x;
-    kf_.statePost.at<float>(1) = initial_detection.bbox.y;
-    kf_.statePost.at<float>(2) = initial_detection.bbox.width;
-    kf_.statePost.at<float>(3) = initial_detection.bbox.height;
+    auto initial_detection_bbox = initial_detection.getBbox();
+    kf_.statePost.at<float>(0) = initial_detection_bbox.x;
+    kf_.statePost.at<float>(1) = initial_detection_bbox.y;
+    kf_.statePost.at<float>(2) = initial_detection_bbox.width;
+    kf_.statePost.at<float>(3) = initial_detection_bbox.height;
     // Initialize velocities to 0
     kf_.statePost.at<float>(4) = 0;
     kf_.statePost.at<float>(5) = 0;
@@ -28,7 +29,8 @@ void KalmanFilter::init(const Detection& initial_detection)
     kf_.statePost.at<float>(7) = 0;
 }
 
-void KalmanFilter::setup_kalman_filter() {
+void KalmanFilter::setup_kalman_filter()
+{
     // Transition matrix (A)
     kf_.transitionMatrix = cv::Mat::eye(state_size, state_size, CV_32F);
     kf_.transitionMatrix.at<float>(0, 4) = 1;
@@ -63,20 +65,24 @@ void KalmanFilter::setup_kalman_filter() {
     kf_.errorCovPost = cv::Mat::eye(state_size, state_size, CV_32F);
 }
 
-void KalmanFilter::predict() {
+void KalmanFilter::predict()
+{
     kf_.predict();
 }
 
-void KalmanFilter::update(const Detection& detection) {
-    measurement_.at<float>(0) = detection.bbox.x;
-    measurement_.at<float>(1) = detection.bbox.y;
-    measurement_.at<float>(2) = detection.bbox.width;
-    measurement_.at<float>(3) = detection.bbox.height;
+void KalmanFilter::update(const Detection& detection)
+{
+    auto detection_bbox = detection.getBbox();
+    measurement_.at<float>(0) = detection_bbox.x;
+    measurement_.at<float>(1) = detection_bbox.y;
+    measurement_.at<float>(2) = detection_bbox.width;
+    measurement_.at<float>(3) = detection_bbox.height;
     
     kf_.correct(measurement_);
 }
 
-cv::Rect_<float> KalmanFilter::predicted_bbox() const {
+[[nodiscard]] cv::Rect_<float> KalmanFilter::predicted_bbox() const
+{
     const cv::Mat& state = kf_.statePre;
     return cv::Rect_<float>(
         state.at<float>(0),
@@ -86,7 +92,8 @@ cv::Rect_<float> KalmanFilter::predicted_bbox() const {
     );
 }
 
-cv::Rect_<float> KalmanFilter::corrected_bbox() const {
+[[nodiscard]] cv::Rect_<float> KalmanFilter::corrected_bbox() const
+{
     const cv::Mat& state = kf_.statePost;
     return cv::Rect_<float>(
         state.at<float>(0),
@@ -96,10 +103,12 @@ cv::Rect_<float> KalmanFilter::corrected_bbox() const {
     );
 }
 
-cv::Mat KalmanFilter::state() const {
+[[nodiscard]] cv::Mat KalmanFilter::state() const
+{
     return kf_.statePost;
 }
 
-cv::Mat KalmanFilter::covariance() const {
+[[nodiscard]] cv::Mat KalmanFilter::covariance() const
+{
     return kf_.errorCovPost;
 }
