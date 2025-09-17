@@ -23,12 +23,6 @@ class Tracker
             const std::vector<std::shared_ptr<Track>>& tracks
         ) const noexcept;
         
-        [[nodiscard]] float calculate_iou
-        (
-            const Detection& det1,
-            const Detection& det2
-        ) const noexcept;
-
         void associate_detections_to_tracks
         (
             const std::vector<Detection>& detections,

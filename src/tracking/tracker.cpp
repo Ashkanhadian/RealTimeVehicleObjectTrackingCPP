@@ -33,7 +33,7 @@ std::vector<Track> Tracker::update(const std::vector<Detection>& detections) noe
 
         for (size_t i = 0; i < cost_matrix.size(); ++i)
         {
-            for (size_t j = 0; j < cost_matrix.size(); ++j)
+            for (size_t j = 0; j < cost_matrix[0].size(); ++j)
             {
                 cost_mat.at<float>(static_cast<int>(i), static_cast<int>(j)) = cost_matrix[i][j];
             }
@@ -116,7 +116,7 @@ std::vector<std::vector<float>> Tracker::create_cost_matrix
         for (size_t j = 0; j < detections.size(); ++j)
         {
             // Using 1 - IoU as cost (lower cost means better match)
-            cost_matrix[i][j] = 1.0f - calculate_iou
+            cost_matrix[i][j] = 1.0f - detection_utils::calculateIoU
             (
                 {0, 0.0f, tracks[i]->predicted_bbox()},
                 detections[j]
@@ -125,29 +125,6 @@ std::vector<std::vector<float>> Tracker::create_cost_matrix
     }
 
     return cost_matrix;
-}
-
-float Tracker::calculate_iou
-(
-    const Detection& det1,
-    const Detection& det2
-) const noexcept
-{
-    const auto& rect1 = det1.getBbox();
-    const auto& rect2 = det2.getBbox();
-
-    float x1 = std::max(rect1.x, rect2.x);
-    float y1 = std::max(rect1.y, rect2.y);
-    float x2 = std::min(rect1.x + rect1.width, rect2.x + rect2.width);
-    float y2 = std::min(rect1.y + rect1.height, rect2.y + rect2.height);
-
-    float intersection = std::max(0.0f, x2 - x1) * std::max(0.0f, y2 - y1);
-
-    float area1 = rect1.width * rect1.height;
-    float area2 = rect2.width * rect2.height;
-    float union_area = area1 + area2 - intersection;
-
-    return union_area > 0 ? intersection / union_area : 0.0f;
 }
 
 void Tracker::associate_detections_to_tracks(
