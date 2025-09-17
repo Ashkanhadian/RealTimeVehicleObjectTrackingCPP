@@ -140,7 +140,7 @@ void Detection::updateConfidence(float new_confidence) noexcept
 (
     const std::vector<Detection>& detections,
     const std::vector<std::shared_ptr<Track>>& tracks,
-    float max_distance = 100.0f
+    float max_distance
 )
 {
     if (tracks.empty() || detections.empty())

@@ -127,16 +127,27 @@ std::vector<std::vector<float>> Tracker::create_cost_matrix
     return cost_matrix;
 }
 
-void Tracker::associate_detections_to_tracks(
+void Tracker::associate_detections_to_tracks
+(
     const std::vector<Detection>& detections,
     const std::vector<std::vector<float>>& cost_matrix,
     std::vector<int>& assignment,
     std::vector<int>& unmatched_detections,
-    std::vector<int>& unmatched_tracks) noexcept {
+    std::vector<int>& unmatched_tracks
+) noexcept
+{
     
     // Initialize all detections as unmatched
     for (size_t i = 0; i < detections.size(); ++i) {
         unmatched_detections.push_back(static_cast<int>(i));
+    }
+
+    // Initialize all tracks as unmatched
+    unmatched_tracks.clear();
+    for (size_t i = 0; i < assignment.size(); ++i) {
+        if (assignment[i] == -1) {
+            unmatched_tracks.push_back(static_cast<int>(i));
+        }
     }
     
     // Find matches based on assignment and cost threshold

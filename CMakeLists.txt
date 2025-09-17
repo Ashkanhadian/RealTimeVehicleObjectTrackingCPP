@@ -43,6 +43,7 @@ add_executable(RealTimeVehicleObjectTrackingCPP
     src/tracking/kalman_filter.cpp
     src/tracking/track.cpp
     src/tracking/tracker.cpp
+    src/tracking/detection.cpp
 )
 
 # ==================================================
