@@ -24,7 +24,6 @@ YOLODetector::YOLODetector(const std::string& model_path,
     }
     
     // Set backend
-    // In the YOLODetector constructor, replace the backend availability check:
     std::vector<std::pair<cv::dnn::Backend, cv::dnn::Target>> availableBackends = cv::dnn::getAvailableBackends();
     bool cudaBackendAvailable = false;
     for (const auto& pair : availableBackends) {
