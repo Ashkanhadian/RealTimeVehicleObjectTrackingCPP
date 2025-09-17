@@ -51,7 +51,7 @@
     return assignments;
 }
 
-void HungarianAlgorithm::step1(int& step, cv::Mat& cost_matrix)
+void HungarianAlgorithm::step1(int& step, cv::Mat& cost_matrix) noexcept
 {
     // Subtract row minima
     for (int i = 0; i < cost_matrix.rows; ++i)
@@ -70,7 +70,7 @@ void HungarianAlgorithm::step2
     cv::Mat& mask,
     cv::Mat& row_cover, 
     cv::Mat& col_cover
-)
+) noexcept
 {
     for (int i = 0; i < cost_matrix.rows; ++i)
     {
@@ -99,7 +99,7 @@ void HungarianAlgorithm::step3
     int& step,
     const cv::Mat& mask,
     cv::Mat& col_cover
-)
+) noexcept
 {
     int col_count = 0;
     for (int i = 0; i < mask.rows; ++i)
@@ -126,7 +126,7 @@ void HungarianAlgorithm::step4
     cv::Mat& col_cover,
     int& row,
     int& col
-)
+) noexcept
 {
     // Find a non-covered zero and prime it
     if (found_a_zero(row, col, cost_matrix, row_cover, col_cover))
@@ -155,35 +155,58 @@ void HungarianAlgorithm::step5
     cv::Mat& mask,
     cv::Mat& row_cover,
     cv::Mat& col_cover
-)
+) noexcept
 {
     // Construct a series of alternating primed and starred zeros
     std::vector<cv::Point> path;
     int row = -1, col = -1;
 
-    // Find a initial primed zero
-    for (int i = 0; i < mask.rows; ++i)
+    // Find the initial primed zero (which should be uncovered)
+    bool found = false;
+    for (int i = 0; i < mask.rows && !found; ++i)
     {
-        for (int j = 0; j < mask.cols; ++j)
+        for (int j = 0; j < mask.cols && !found; ++j)
         {
-            if (mask.at<char>(i, j) == 2)
+            if (mask.at<char>(i, j) == 2 && row_cover.at<char>(i) == 0 && col_cover.at<char>(j) == 0)
             {
+                row = i;
+                col = j;
+                found = true;
                 path.emplace_back(j, i);
-                break;
             }
         }
     }
 
+    if (!found) {
+        step = 4;
+        return;
+    }
+
     // Follow the path of alternating primed and starred zeros
-    while (true)
+    bool done = false;
+    while (!done)
     {
         // Find starred zero in the same column
         if (star_in_col(path.back().x, mask))
         {
-            find_star_in_row(path.back().y, col, mask);
-            path.emplace_back(col, path.back().y);
-        } else {
+            int star_row;
+            find_star_in_col(path.back().x, star_row, mask);
+            path.emplace_back(path.back().x, star_row);
+        } else
+        {
+            done = true;
             break;
+        }
+
+        // Find primed zero in the same row
+        if (prime_in_row(path.back().y, mask))
+        {
+            int prime_col;
+            find_prime_in_row(path.back().y, prime_col, mask);
+            path.emplace_back(prime_col, path.back().y);
+        } else
+        {
+            done = true;
         }
     }
 
@@ -193,16 +216,16 @@ void HungarianAlgorithm::step5
         if (mask.at<char>(p.y, p.x) == 1)
         {
             mask.at<char>(p.y, p.x) = 0;
-        } else {
+        } else
+        {
             mask.at<char>(p.y, p.x) = 1;
         }
     }
 
-    // Reset covers and primes
+    // Reset covers and clear primes
     row_cover.setTo(0);
     col_cover.setTo(0);
-
-    // Earase all primes
+    
     for (int i = 0; i < mask.rows; ++i)
     {
         for (int j = 0; j < mask.cols; ++j)
@@ -223,7 +246,7 @@ void HungarianAlgorithm::step6
     cv::Mat& cost_matrix,
     const cv::Mat& row_cover,
     const cv::Mat& col_cover
-)
+) noexcept
 {
     // Find the minimum uncovered value
     float min_val = std::numeric_limits<float>::max();
@@ -268,7 +291,7 @@ void HungarianAlgorithm::step6
     const cv::Mat& cost_matrix,
     const cv::Mat& row_cover,
     const cv::Mat& col_cover
-)
+) const noexcept
 {
     row = -1;
     col = -1;
@@ -296,7 +319,7 @@ void HungarianAlgorithm::step6
 (
     int row,
     const cv::Mat& mask_matrix
-)
+) const noexcept
 {
     for (int j = 0; j < mask_matrix.cols; ++j)
     {
@@ -311,7 +334,7 @@ void HungarianAlgorithm::find_star_in_row
     int row,
     int& col,
     const cv::Mat& mask_matrix
-)
+) const noexcept
 {
     col = -1;
     for (int j = 0; j < mask_matrix.cols; ++j)
@@ -328,7 +351,7 @@ void HungarianAlgorithm::find_star_in_row
 (
     int col,
     const cv::Mat& mask_matrix
-)
+) const noexcept
 {
     for (int i = 0; i < mask_matrix.rows; ++i)
     {
@@ -345,7 +368,7 @@ void HungarianAlgorithm::find_star_in_col
     int col,
     int& row,
     const cv::Mat& mask_matrix
-)
+) const noexcept
 {
     row = -1;
     for (int i = 0; i < mask_matrix.rows; ++i)
@@ -353,6 +376,38 @@ void HungarianAlgorithm::find_star_in_col
         if (mask_matrix.at<char>(i, col) == 1)
         {
             row = i;
+            return;
+        }
+    }
+}
+
+[[nodiscard]] bool HungarianAlgorithm::prime_in_row
+(
+    int row,
+    const cv::Mat& mask_matrix
+) const noexcept
+{
+    for (int j = 0; j < mask_matrix.cols; ++j)
+    {
+        if (mask_matrix.at<char>(row, j) == 2)
+            return true;
+    }
+    return false;
+}
+
+void HungarianAlgorithm::find_prime_in_row
+(
+    int row,
+    int& col,
+    const cv::Mat& mask_matrix
+) const noexcept
+{
+    col = -1;
+    for (int j = 0; j < mask_matrix.cols; ++j)
+    {
+        if (mask_matrix.at<char>(row, j) == 2)
+        {
+            col = j;
             return;
         }
     }
