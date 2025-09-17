@@ -1,5 +1,6 @@
 #include "../../include/tracking/detection.hpp"
-#include<cmath>
+
+#include <cmath>
 
 Detection::Detection(int class_id, float confidence, const cv::Rect_<float>& bbox)
     : class_id(class_id), confidence(confidence), bbox(bbox) {}

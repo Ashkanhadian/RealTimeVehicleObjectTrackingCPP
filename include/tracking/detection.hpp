@@ -1,7 +1,9 @@
 #pragma once
 
-#include "track.hpp"
 #include <opencv2/opencv.hpp>
+#include <memory>
+
+class Track;
 
 class Detection
 {
