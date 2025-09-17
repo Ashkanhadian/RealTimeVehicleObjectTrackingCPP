@@ -28,3 +28,58 @@ float detection_utils::calculateIoU
 
     return union_area > 0 ? intersection / union_area : 0.0f;
 }
+
+float detection_utils::calculateDistance
+(
+    const Detection& det1,
+    const Detection& det2
+)
+{
+    return calculateDistance(det1.getCenter(), det2.getCenter());
+}
+
+float detection_utils::calculateDistance
+(
+    const cv::Point2f& point1,
+    const cv::Point2f& point2
+)
+{
+    float dx = point2.x - point1.x;
+    float dy = point2.y - point1.y;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+cv::Rect_<float> detection_utils::toX1Y1X2Y2
+(
+    const cv::Rect_<float>& bbox
+)
+{
+    return cv::Rect_<float>(bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height);
+}
+
+cv::Rect_<float> detection_utils::toXYWH
+(
+    const cv::Rect_<float>& bbox
+)
+{
+    return cv::Rect_<float>(bbox.x, bbox.y, bbox.width - bbox.x, bbox.height - bbox.y);
+}
+
+cv::Mat detection_utils::createIoUCostMatrix
+(
+    const std::vector<Detection>& detections,
+    const std::vector<std::shared_ptr<Track>>& tracks
+)
+{
+
+}
+
+cv::Mat detection_utils::createDistanceCostMatrix
+(
+    const std::vector<Detection>& detections,
+    const std::vector<std::shared_ptr<Track>>& tracks,
+    float max_distance = 100.0f
+)
+{
+    
+}
