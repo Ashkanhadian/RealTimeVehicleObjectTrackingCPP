@@ -13,12 +13,12 @@ class Detection
     public:
         Detection(int class_id, float confidence, const cv::Rect_<float>& bbox);
 
-        int getClassId() const;
-        float getConfidence() const;
-        cv::Rect_<float> getBbox() const;
+        int getClassId() const noexcept;
+        float getConfidence() const noexcept;
+        cv::Rect_<float> getBbox() const noexcept;
 
-        cv::Point2f getCenter() const;
-        float getArea() const;
+        cv::Point2f getCenter() const noexcept;
+        float getArea() const noexcept;
 
         void updateBbox(const cv::Rect_<float>& new_bbox);
         void updateConfidence(float new_confidence);

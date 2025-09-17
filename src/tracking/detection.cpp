@@ -1,4 +1,43 @@
 #include "../../include/tracking/detection.hpp"
+#include<cmath>
+
+Detection::Detection(int class_id, float confidence, const cv::Rect_<float>& bbox)
+    : class_id(class_id), confidence(confidence), bbox(bbox) {}
+
+int Detection::getClassId() const noexcept
+{
+    return class_id;
+}
+
+float Detection::getConfidence() const noexcept
+{
+    return confidence;
+}
+
+cv::Rect_<float> Detection::getBbox() const noexcept
+{
+    return bbox;
+}
+
+cv::Point2f Detection::getCenter() const noexcept
+{
+    return cv::Point2f(bbox.x + bbox.width / 2.0f, bbox.y + bbox.height / 2.0f);
+}
+
+float Detection::getArea() const noexcept
+{
+    return bbox.width * bbox.height;
+}
+
+void Detection::updateBbox(const cv::Rect_<float>& new_bbox)
+{
+    bbox = new_bbox;
+}
+
+void Detection::updateConfidence(float new_confidence)
+{
+    confidence = new_confidence;
+}
 
 float detection_utils::calculateIoU
 (
@@ -18,7 +57,7 @@ float detection_utils::calculateIoU
     float x1 = std::max(rect1.x, rect2.x);
     float y1 = std::max(rect1.y, rect2.y);
     float x2 = std::min(rect1.x + rect1.width, rect2.x + rect2.width);
-    float y2 = std::min(rect1.x + rect1.height, rect2.y + rect2.height);
+    float y2 = std::min(rect1.y + rect1.height, rect2.y + rect2.height);
 
     float intersection = std::max(0.0f, x2 - x1) * std::max(0.0f, y2 - y1);
 
@@ -62,6 +101,7 @@ cv::Rect_<float> detection_utils::toXYWH
     const cv::Rect_<float>& bbox
 )
 {
+    // NOTE: This assumes the input bbox is in (x1, y1, x2, y2) format
     return cv::Rect_<float>(bbox.x, bbox.y, bbox.width - bbox.x, bbox.height - bbox.y);
 }
 
@@ -71,7 +111,27 @@ cv::Mat detection_utils::createIoUCostMatrix
     const std::vector<std::shared_ptr<Track>>& tracks
 )
 {
+    if (tracks.empty() || detections.empty())
+    {
+        return cv::Mat();
+    }
 
+    cv::Mat cost_matrix(tracks.size(), detections.size(), CV_32F);
+
+    for (size_t i = 0; i < tracks.size(); ++i)
+    {
+        // Create a detection from the track's predicted bounding box
+        Detection track_det(-1, 0.0f, tracks[i]->predicted_bbox());
+
+        for (size_t j = 0; j < detections.size(); ++j)
+        {
+            // Calculate IoU and use 1 - IoU as cost (lower is better)
+            float iou = calculateIoU(track_det, detections[j]);
+            cost_matrix.at<float>(i, j) = 1.0f - iou;
+        }
+    }
+
+    return cost_matrix;
 }
 
 cv::Mat detection_utils::createDistanceCostMatrix
@@ -81,5 +141,27 @@ cv::Mat detection_utils::createDistanceCostMatrix
     float max_distance = 100.0f
 )
 {
-    
+    if (tracks.empty() || detections.empty())
+    {
+        return cv::Mat();
+    }
+
+    cv::Mat cost_matrix(tracks.size(), detections.size(), CV_32F);
+
+    for (size_t i = 0; i < tracks.size(); ++i)
+    {
+        // Get the center of the track's predicted bounding box
+        cv::Rect_<float> track_bbox = tracks[i]->predicted_bbox();
+        cv::Point2f track_center(track_bbox.x + track_bbox.width / 2.0f,
+                                 track_bbox.y + track_bbox.height / 2.0f);
+
+        for (size_t j = 0; j < detections.size(); ++j)
+        {
+            // Calculate distance and normalize to [0, 1] range
+            float distance = calculateDistance(track_center, detections[j].getCenter());
+            cost_matrix.at<float>(i, j) = std::min(distance / max_distance, 1.0f);
+        }
+    }
+
+    return cost_matrix;
 }
