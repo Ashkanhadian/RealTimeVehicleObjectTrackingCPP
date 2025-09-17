@@ -1,59 +1,60 @@
 #include "../../include/tracking/detection.hpp"
+#include "../../include/tracking/track.hpp"
 
 #include <cmath>
 
 Detection::Detection(int class_id, float confidence, const cv::Rect_<float>& bbox)
     : class_id(class_id), confidence(confidence), bbox(bbox) {}
 
-int Detection::getClassId() const noexcept
+[[nodiscard]] int Detection::getClassId() const noexcept
 {
     return class_id;
 }
 
-float Detection::getConfidence() const noexcept
+[[nodiscard]] float Detection::getConfidence() const noexcept
 {
     return confidence;
 }
 
-cv::Rect_<float> Detection::getBbox() const noexcept
+[[nodiscard]] cv::Rect_<float> Detection::getBbox() const noexcept
 {
     return bbox;
 }
 
-cv::Point2f Detection::getCenter() const noexcept
+[[nodiscard]] cv::Point2f Detection::getCenter() const noexcept
 {
     return cv::Point2f(bbox.x + bbox.width / 2.0f, bbox.y + bbox.height / 2.0f);
 }
 
-float Detection::getArea() const noexcept
+[[nodiscard]] float Detection::getArea() const noexcept
 {
     return bbox.width * bbox.height;
 }
 
-void Detection::updateBbox(const cv::Rect_<float>& new_bbox)
+[[nodiscard]] void Detection::updateBbox(const cv::Rect_<float>& new_bbox) noexcept
 {
     bbox = new_bbox;
 }
 
-void Detection::updateConfidence(float new_confidence)
+void Detection::updateConfidence(float new_confidence) noexcept
 {
     confidence = new_confidence;
 }
 
-float detection_utils::calculateIoU
+[[nodiscard]] float detection_utils::calculateIoU
 (
     const Detection& det1,
     const Detection& det2
-)
+) noexcept
 {
     return calculateIoU(det1.getBbox(), det2.getBbox());
 }
 
-float detection_utils::calculateIoU
+[[nodiscard]] float detection_utils::calculateIoU
 (
     const cv::Rect_<float>& rect1,
     const cv::Rect_<float>& rect2
-)
+) noexcept
 {
     float x1 = std::max(rect1.x, rect2.x);
     float y1 = std::max(rect1.y, rect2.y);
@@ -69,44 +70,44 @@ float detection_utils::calculateIoU
     return union_area > 0 ? intersection / union_area : 0.0f;
 }
 
-float detection_utils::calculateDistance
+[[nodiscard]] float detection_utils::calculateDistance
 (
     const Detection& det1,
     const Detection& det2
-)
+) noexcept
 {
     return calculateDistance(det1.getCenter(), det2.getCenter());
 }
 
-float detection_utils::calculateDistance
+[[nodiscard]] float detection_utils::calculateDistance
 (
     const cv::Point2f& point1,
     const cv::Point2f& point2
-)
+) noexcept
 {
     float dx = point2.x - point1.x;
     float dy = point2.y - point1.y;
     return std::sqrt(dx * dx + dy * dy);
 }
 
-cv::Rect_<float> detection_utils::toX1Y1X2Y2
+[[nodiscard]] cv::Rect_<float> detection_utils::toX1Y1X2Y2
 (
     const cv::Rect_<float>& bbox
-)
+) noexcept
 {
     return cv::Rect_<float>(bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height);
 }
 
-cv::Rect_<float> detection_utils::toXYWH
+[[nodiscard]] cv::Rect_<float> detection_utils::toXYWH
 (
     const cv::Rect_<float>& bbox
-)
+) noexcept
 {
     // NOTE: This assumes the input bbox is in (x1, y1, x2, y2) format
     return cv::Rect_<float>(bbox.x, bbox.y, bbox.width - bbox.x, bbox.height - bbox.y);
 }
 
-cv::Mat detection_utils::createIoUCostMatrix
+[[nodiscard]] cv::Mat detection_utils::createIoUCostMatrix
 (
     const std::vector<Detection>& detections,
     const std::vector<std::shared_ptr<Track>>& tracks
@@ -135,7 +136,7 @@ cv::Mat detection_utils::createIoUCostMatrix
     return cost_matrix;
 }
 
-cv::Mat detection_utils::createDistanceCostMatrix
+[[nodiscard]] cv::Mat detection_utils::createDistanceCostMatrix
 (
     const std::vector<Detection>& detections,
     const std::vector<std::shared_ptr<Track>>& tracks,
