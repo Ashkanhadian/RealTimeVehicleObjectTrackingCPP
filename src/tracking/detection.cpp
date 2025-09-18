@@ -41,6 +41,8 @@ void Detection::updateConfidence(float new_confidence) noexcept
     confidence = new_confidence;
 }
 
+#ifndef EXCLUDE_TRACK_DEPENDENT
+
 [[nodiscard]] float detection_utils::calculateIoU
 (
     const Detection& det1,
@@ -167,3 +169,5 @@ void Detection::updateConfidence(float new_confidence) noexcept
 
     return cost_matrix;
 }
+
+#endif // EXCLUDE_TRACK_DEPENDENT

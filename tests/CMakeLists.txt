@@ -46,6 +46,7 @@ target_include_directories(KalmanTest PRIVATE
     ${OpenCV_INCLUDE_DIRS}
     ${GTEST_INCLUDE_DIRS}
 )
+target_compile_definitions(KalmanTest PRIVATE EXCLUDE_TRACK_DEPENDENT)
 target_link_libraries(KalmanTest PRIVATE 
     GTest::gtest 
     GTest::gtest_main 
