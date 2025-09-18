@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
 project(RealTimeVehicleObjectTrackingCPP_Tests)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(GTEST_ROOT "C:/GoogleTest")
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
@@ -12,7 +16,6 @@ find_package(OpenCV REQUIRED COMPONENTS
     imgproc
     dnn
 )
-
 
 # Detection tests
 add_executable(DetectionTest 
