@@ -15,12 +15,15 @@ find_package(OpenCV REQUIRED COMPONENTS
     highgui
     imgproc
     dnn
+    video
 )
 
 # Detection tests
 add_executable(DetectionTest 
     detection_test/detection_test.cpp 
     ../src/tracking/detection.cpp
+    ../src/tracking/track.cpp
+    ../src/tracking/kalman_filter.cpp
     )
 target_include_directories(DetectionTest PRIVATE 
     ../include 
@@ -29,6 +32,22 @@ target_include_directories(DetectionTest PRIVATE
 )
 target_link_libraries(DetectionTest PRIVATE 
     GTest::gtest
+    GTest::gtest_main 
+    ${OpenCV_LIBS}
+)
+
+add_executable(KalmanTest 
+    kalman_test/kalman_test.cpp
+    ../src/tracking/kalman_filter.cpp
+    ../src/tracking/detection.cpp
+)
+target_include_directories(KalmanTest PRIVATE 
+    ../include 
+    ${OpenCV_INCLUDE_DIRS}
+    ${GTEST_INCLUDE_DIRS}
+)
+target_link_libraries(KalmanTest PRIVATE 
+    GTest::gtest 
     GTest::gtest_main 
     ${OpenCV_LIBS}
 )
@@ -67,30 +86,13 @@ target_link_libraries(DetectionTest PRIVATE
 #     ${OpenCV_LIBS}
 # )
 
-# Kalman tests
-# add_executable(KalmanTest 
-#     kalman_test/kalman_test.cpp
-#     ../src/tracking/kalman_filter.cpp
-#     ../src/tracking/detection.cpp
-# )
-# target_include_directories(KalmanTest PRIVATE 
-#     ../include 
-#     ${OpenCV_INCLUDE_DIRS}
-#     ${GTEST_INCLUDE_DIRS}
-# )
-# target_link_libraries(KalmanTest PRIVATE 
-#     GTest::gtest 
-#     GTest::gtest_main 
-#     ${OpenCV_LIBS}
-# )
-
 # Add all tests to a custom target
 add_custom_target(run_all_tests
     COMMAND DetectionTest
+    COMMAND KalmanTest
     # COMMAND TrackTest
     # COMMAND HungarianTest
-    # COMMAND KalmanTest
     # DEPENDS DetectionTest TrackTest HungarianTest KalmanTest
-    DEPENDS DetectionTest
+    DEPENDS DetectionTest KalmanTest
     COMMENT "Running tests..."
 )

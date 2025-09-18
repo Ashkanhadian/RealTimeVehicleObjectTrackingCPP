@@ -13,6 +13,7 @@ find_package(OpenCV REQUIRED COMPONENTS
     core
     highgui
     imgproc
+    video
     dnn
     cudaarithm
     cudabgsegm

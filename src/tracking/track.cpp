@@ -1,6 +1,9 @@
 #include "tracking/track.hpp"
 #include <iostream>
 
+int Track::min_hits_ = 3;
+int Track::max_age_ = 30;
+
 Track::Track
 (
     int id,

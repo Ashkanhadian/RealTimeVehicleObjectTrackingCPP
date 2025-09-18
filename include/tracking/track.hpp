@@ -35,6 +35,6 @@ class Track
         [[nodiscard]] bool is_confirmed() const noexcept;
         [[nodiscard]] bool is_dead() const noexcept;
 
-        static inline int min_hits_ = 3;
-        static inline int max_age_ = 30;
+        static int min_hits_;
+        static int max_age_;
 };
