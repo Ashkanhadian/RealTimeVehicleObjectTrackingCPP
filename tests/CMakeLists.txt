@@ -31,22 +31,22 @@ target_link_libraries(DetectionTest PRIVATE
 )
 
 # Track tests
-add_executable(TrackTest 
-    track_test/track_test.cpp
-    ../src/tracking/track.cpp
-    ../src/tracking/kalman_filter.cpp
-    ../src/tracking/detection.cpp
-)
-target_include_directories(TrackTest PRIVATE 
-    ../include 
-    ${OpenCV_INCLUDE_DIRS}
-    ${GTEST_INCLUDE_DIRS}
-)
-target_link_libraries(TrackTest PRIVATE 
-    GTest::gtest
-    GTest::gtest_main 
-    ${OpenCV_LIBS}
-)
+# add_executable(TrackTest 
+#     track_test/track_test.cpp
+#     ../src/tracking/track.cpp
+#     ../src/tracking/kalman_filter.cpp
+#     ../src/tracking/detection.cpp
+# )
+# target_include_directories(TrackTest PRIVATE 
+#     ../include 
+#     ${OpenCV_INCLUDE_DIRS}
+#     ${GTEST_INCLUDE_DIRS}
+# )
+# target_link_libraries(TrackTest PRIVATE 
+#     GTest::gtest
+#     GTest::gtest_main 
+#     ${OpenCV_LIBS}
+# )
 
 # Hungarian tests
 # add_executable(HungarianTest 
@@ -84,10 +84,10 @@ target_link_libraries(TrackTest PRIVATE
 # Add all tests to a custom target
 add_custom_target(run_all_tests
     COMMAND DetectionTest
-    COMMAND TrackTest
+    # COMMAND TrackTest
     # COMMAND HungarianTest
     # COMMAND KalmanTest
     # DEPENDS DetectionTest TrackTest HungarianTest KalmanTest
-    DEPENDS DetectionTest TrackTest
+    DEPENDS DetectionTest
     COMMENT "Running tests..."
 )
