@@ -192,9 +192,6 @@ std::vector<Detection> YOLODetector::detect(cv::Mat& frame)
         return parse_detections(frame, outputs);
     } catch (const std::exception& e) {
         std::cerr << "Detection error: " << e.what() << std::endl;
-        if (device_type_ == DeviceType::CUDA) {
-            cv::cuda::resetDevice();
-        }
         return {};
     }
 }
