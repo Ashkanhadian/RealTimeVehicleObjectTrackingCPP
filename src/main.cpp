@@ -43,19 +43,9 @@ int main(int argc, char** argv)
 
     try
     {
-        std::cout << "Initializing YOLO detection..." << std::endl;
-
         YOLODetector detector(modelPath, deviceType, confThreshold, nmsThreshold);
 
-        std::cout << "YOLO detector initialized successfully" << std::endl;
-
-        std::cout << "Initializing tracker..." << std::endl;
-
         Tracker tracker(iouThreshold);
-
-        std::cout << "Tracker initialized successfully" << std::endl;
-
-        std::cout << "Opening video capture..." << std::endl;
 
         cv::VideoCapture cap;
         cap.open(videoPath);
@@ -65,13 +55,12 @@ int main(int argc, char** argv)
             std::cerr << "Error: Could not open video source: " << videoPath << std::endl;
             return -1;
         }
-        std::cout << "Video capture opened successfully" << std::endl;
 
         int frameWidth = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
         int frameHeight = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
         double fps = cap.get(cv::CAP_PROP_FPS);
 
-        int targetWidth = 1280;
+        int targetWidth = 640;
         int targetHeight = static_cast<int>(frameHeight * (targetWidth / static_cast<float>(frameWidth)));
 
         std::cout << "Original resolution: " << frameWidth << "x" << frameHeight << std::endl;
@@ -85,7 +74,6 @@ int main(int argc, char** argv)
         int frameCount = 0;
         int processedFrames = 0;
 
-        std::cout << "Starting main processing loop..." << std::endl;
         cv::Mat frame, resizedFrame;
         while (true)
         {
@@ -100,13 +88,13 @@ int main(int argc, char** argv)
 
             cv::resize(frame, resizedFrame, cv::Size(targetWidth, targetHeight));
 
-            std::cout << "Detecting objects..." << std::endl;
+            // std::cout << "Detecting objects..." << std::endl;
             auto detections = detector.detect(resizedFrame);
-            std::cout << "Detected " << detections.size() << " objects" << std::endl;
+            // std::cout << "Detected " << detections.size() << " objects" << std::endl;
 
-            std::cout << "Updating tracker..." << std::endl;
+            // std::cout << "Updating tracker..." << std::endl;
             auto tracks = tracker.update(detections);
-            std::cout << "Tracking " << tracks.size() << " objects" << std::endl;
+            // std::cout << "Tracking " << tracks.size() << " objects" << std::endl;
 
             
             detector.draw_detections(resizedFrame, detections);

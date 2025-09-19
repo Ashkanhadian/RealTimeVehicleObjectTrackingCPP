@@ -99,8 +99,8 @@ std::vector<Detection> YOLODetector::parse_detections
     std::vector<cv::Rect> boxes;
     
     // Resizing factor
-    float x_factor = static_cast<float>(frame.cols) / input_width_;
-    float y_factor = static_cast<float>(frame.rows) / input_height_;
+    // float x_factor = 1.0f;
+    // float y_factor = 1.0f;
     
     // Get output dimensions
     const auto& dimensions = outputs[0].size;
@@ -134,10 +134,10 @@ std::vector<Detection> YOLODetector::parse_detections
                 float h = data[3];
                 
                 // Convert to image coordinates
-                int left = static_cast<int>((x - w / 2) * x_factor);
-                int top = static_cast<int>((y - h / 2) * y_factor);
-                int width = static_cast<int>(w * x_factor);
-                int height = static_cast<int>(h * y_factor);
+                int left = static_cast<int>((x - w / 2));
+                int top = static_cast<int>((y - h / 2));
+                int width = static_cast<int>(w);
+                int height = static_cast<int>(h);
                 
                 // Ensure coordinates are within image bounds
                 left = std::max(0, left);
