@@ -18,7 +18,63 @@ std::vector<Track> Tracker::update(const std::vector<Detection>& detections) noe
         track->predict();
     }
 
+    if (tracks_.empty())
+    {
+        // Create new tracks for all detections
+        for (const auto& detection : detections)
+        {
+            tracks_.push_back(std::make_shared<Track>(next_id_++, detection, current_time));
+        }
+
+        // Return confirmed tracks
+        std::vector<Track> result;
+        for (const auto& track : tracks_)
+        {
+            if (track->is_confirmed())
+            {
+                result.push_back(*track);
+            }
+        }
+
+        last_update_time_ = current_time;
+        return result;
+    }
+
+    if (detections.empty())
+    {
+        // Mark all tracks as missed
+        for (auto& track : tracks_)
+        {
+            track->mark_missed();
+        }
+
+        // Remove dead tracks
+        tracks_.erase(std::remove_if(tracks_.begin(), tracks_.end(),
+                                     [](const std::shared_ptr<Track>& track)
+                                     {
+                                        return track->is_dead();
+                                     }), tracks_.end());
+        
+        // Return confirmed tracks
+        std::vector<Track> result;
+        for (const auto& track : tracks_)
+        {
+            if (track->is_confirmed())
+            {
+                result.push_back(*track);
+            }
+        }
+
+        last_update_time_ = current_time;
+        return result;
+    }
+
     auto cost_matrix = create_cost_matrix(detections, tracks_);
+
+    std::cout << "Cost matrix size: " << cost_matrix.size() << "x" 
+              << (cost_matrix.empty() ? 0 : cost_matrix[0].size()) << std::endl;
+    std::cout << "Tracks count: " << tracks_.size() << std::endl;
+    std::cout << "Detections count: " << detections.size() << std::endl;
 
     // Solve assignment problem
     std::vector<int> assignment;
@@ -49,6 +105,8 @@ std::vector<Track> Tracker::update(const std::vector<Detection>& detections) noe
             unmatched_detections,
             unmatched_tracks
         );
+
+        std::cout << "Assignment result size: " << assignment.size() << std::endl;
     } else
     {
         // All detections are unmatched if no tracks exist
@@ -109,18 +167,19 @@ std::vector<std::vector<float>> Tracker::create_cost_matrix
     }
 
     std::vector<std::vector<float>> cost_matrix(tracks.size(),
-                                                std::vector<float>(detections.size()));
+                                                std::vector<float>(detections.size(), 1.0f));
 
     for (size_t i = 0; i < tracks.size(); ++i)
     {
         for (size_t j = 0; j < detections.size(); ++j)
         {
             // Using 1 - IoU as cost (lower cost means better match)
-            cost_matrix[i][j] = 1.0f - detection_utils::calculateIoU
+            float iou = 1.0f - detection_utils::calculateIoU
             (
-                {0, 0.0f, tracks[i]->predicted_bbox()},
-                detections[j]
+                tracks[i]->predicted_bbox(),
+                detections[j].getBbox()
             );
+            cost_matrix[i][j] = 1.0f - iou;
         }
     }
 
@@ -136,35 +195,76 @@ void Tracker::associate_detections_to_tracks
     std::vector<int>& unmatched_tracks
 ) noexcept
 {
-    
+    unmatched_detections.clear();
+    unmatched_tracks.clear();
+
     // Initialize all detections as unmatched
-    for (size_t i = 0; i < detections.size(); ++i) {
-        unmatched_detections.push_back(static_cast<int>(i));
+    for (int i = 0; i < detections.size(); i++)
+    {
+        unmatched_detections.push_back(i);
     }
 
-    // Initialize all tracks as unmatched
-    unmatched_tracks.clear();
-    for (size_t i = 0; i < assignment.size(); ++i) {
-        if (assignment[i] == -1) {
-            unmatched_tracks.push_back(static_cast<int>(i));
-        }
-    }
-    
-    // Find matches based on assignment and cost threshold
-    for (size_t i = 0; i < assignment.size(); ++i) {
+    // Process assignments
+    for (int i = 0; i < assignment.size(); i++)
+    {
         int j = assignment[i];
-        if (j != -1 && j < detections.size() && cost_matrix[i][j] < (1.0f - iou_threshold_)) {
-            // Valid assignment
-            assignment[i] = j;
-            // Remove from unmatched detections
-            unmatched_detections.erase(
-                std::remove(unmatched_detections.begin(), 
-                           unmatched_detections.end(), j),
-                unmatched_detections.end());
-        } else {
-            // Invalid assignment
-            assignment[i] = -1;
-            unmatched_tracks.push_back(static_cast<int>(i));
+
+        if (j != -1 && 
+            j < detections.size() && 
+            cost_matrix[i][j] < (1.0f - iou_threshold_))
+        {
+            // Valid assignment - remove from unmatched detections
+            auto it = std::find(unmatched_detections.begin(), unmatched_detections.end(), j);
+            if (it != unmatched_detections.end())
+            {
+                unmatched_detections.erase(it);
+            }
+        } else
+        {
+            // Invalid assignment - mark track as unmatched
+            unmatched_tracks.push_back(i);
         }
     }
 }
+
+// void Tracker::associate_detections_to_tracks
+// (
+//     const std::vector<Detection>& detections,
+//     const std::vector<std::vector<float>>& cost_matrix,
+//     std::vector<int>& assignment,
+//     std::vector<int>& unmatched_detections,
+//     std::vector<int>& unmatched_tracks
+// ) noexcept
+// {
+    
+//     // Initialize all detections as unmatched
+//     for (size_t i = 0; i < detections.size(); ++i) {
+//         unmatched_detections.push_back(static_cast<int>(i));
+//     }
+
+//     // Initialize all tracks as unmatched
+//     unmatched_tracks.clear();
+//     for (size_t i = 0; i < assignment.size(); ++i) {
+//         if (assignment[i] == -1) {
+//             unmatched_tracks.push_back(static_cast<int>(i));
+//         }
+//     }
+    
+//     // Find matches based on assignment and cost threshold
+//     for (size_t i = 0; i < assignment.size(); ++i) {
+//         int j = assignment[i];
+//         if (j != -1 && j < detections.size() && cost_matrix[i][j] < (1.0f - iou_threshold_)) {
+//             // Valid assignment
+//             assignment[i] = j;
+//             // Remove from unmatched detections
+//             unmatched_detections.erase(
+//                 std::remove(unmatched_detections.begin(), 
+//                            unmatched_detections.end(), j),
+//                 unmatched_detections.end());
+//         } else {
+//             // Invalid assignment
+//             assignment[i] = -1;
+//             unmatched_tracks.push_back(static_cast<int>(i));
+//         }
+//     }
+// }

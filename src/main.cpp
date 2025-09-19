@@ -71,7 +71,7 @@ int main(int argc, char** argv)
         int frameHeight = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
         double fps = cap.get(cv::CAP_PROP_FPS);
 
-        int targetWidth = 640;
+        int targetWidth = 1280;
         int targetHeight = static_cast<int>(frameHeight * (targetWidth / static_cast<float>(frameWidth)));
 
         std::cout << "Original resolution: " << frameWidth << "x" << frameHeight << std::endl;
@@ -104,30 +104,30 @@ int main(int argc, char** argv)
             auto detections = detector.detect(resizedFrame);
             std::cout << "Detected " << detections.size() << " objects" << std::endl;
 
-            // std::cout << "Updating tracker..." << std::endl;
-            // auto tracks = tracker.update(detections);
-            // std::cout << "Tracking " << tracks.size() << " objects" << std::endl;
+            std::cout << "Updating tracker..." << std::endl;
+            auto tracks = tracker.update(detections);
+            std::cout << "Tracking " << tracks.size() << " objects" << std::endl;
 
             
             detector.draw_detections(resizedFrame, detections);
 
-            // for (const auto& track : tracks)
-            // {
-            //     auto bbox = track.current_bbox();
-            //     int trackId = track.id();
+            for (const auto& track : tracks)
+            {
+                auto bbox = track.current_bbox();
+                int trackId = track.id();
                 
-            //     // Only draw vehicles (car, motorcycle, bus, truck)
-            //     if (track.id() == 2 || track.id() == 3 || 
-            //         track.id() == 5 || track.id() == 7) {
-            //         // Draw bounding box
-            //         rectangle(resizedFrame, bbox, cv::Scalar(0, 255, 255), 2);
+                // Only draw vehicles (car, motorcycle, bus, truck)
+                if (track.id() == 2 || track.id() == 3 || 
+                    track.id() == 5 || track.id() == 7) {
+                    // Draw bounding box
+                    rectangle(resizedFrame, bbox, cv::Scalar(0, 255, 255), 2);
                     
-            //         // Draw track ID
-            //         std::string label = "ID: " + std::to_string(trackId);
-            //         putText(resizedFrame, label, cv::Point(bbox.x, bbox.y - 10),
-            //                 cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 2);
-            //     }
-            // }
+                    // Draw track ID
+                    std::string label = "ID: " + std::to_string(trackId);
+                    putText(resizedFrame, label, cv::Point(bbox.x, bbox.y - 10),
+                            cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 2);
+                }
+            }
 
             // Calculate and display FPS
             frameCount++;

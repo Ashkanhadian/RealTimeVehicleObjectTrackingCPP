@@ -11,15 +11,29 @@
     const int n = cost_matrix.rows;
     const int m = cost_matrix.cols;
     
-    // Create a copy of the cost matrix
-    cv::Mat cost = cost_matrix.clone();
+    const int k = std::max(n, m);
     
+    // Create a square cost matrix by padding with zeros
+    cv::Mat square_cost = cv::Mat::zeros(k, k, CV_32F);
+
+    // Copy the original cost values
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < m; ++j)
+        {
+            square_cost.at<float>(i, j) = cost_matrix.at<float>(i, j);
+        }
+    }
+
+    // Use the square matrix for the Hungarian Algorithm
+    cv::Mat cost = square_cost.clone();
+
     // Initialize mask matrix (0: no assignment, 1: starred, 2: primed)
-    cv::Mat mask = cv::Mat::zeros(n, m, CV_8S);
+    cv::Mat mask = cv::Mat::zeros(k, k, CV_8S);
     
     // Initialize row and column covers
-    cv::Mat row_cover = cv::Mat::zeros(1, n, CV_8S);
-    cv::Mat col_cover = cv::Mat::zeros(1, m, CV_8S);
+    cv::Mat row_cover = cv::Mat::zeros(1, k, CV_8S);
+    cv::Mat col_cover = cv::Mat::zeros(1, k, CV_8S);
     
     // Steps of the algorithm
     int step = 1;
@@ -37,10 +51,10 @@
         }
     }
     
-    // Extract assignments
+    // Extract assignments (only for the original rows)
     std::vector<int> assignments(n, -1);
     for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < m; ++j) {
+        for (int j = 0; j < m; ++j) {   // Only consider original columns
             if (mask.at<char>(i, j) == 1) {
                 assignments[i] = j;
                 break;
