@@ -43,9 +43,19 @@ int main(int argc, char** argv)
 
     try
     {
+        std::cout << "Initializing YOLO detection..." << std::endl;
+
         YOLODetector detector(modelPath, deviceType, confThreshold, nmsThreshold);
 
+        std::cout << "YOLO detector initialized successfully" << std::endl;
+
+        std::cout << "Initializing tracker..." << std::endl;
+
         Tracker tracker(iouThreshold);
+
+        std::cout << "Tracker initialized successfully" << std::endl;
+
+        std::cout << "Opening video capture..." << std::endl;
 
         cv::VideoCapture cap;
         cap.open(videoPath);
@@ -55,49 +65,69 @@ int main(int argc, char** argv)
             std::cerr << "Error: Could not open video source: " << videoPath << std::endl;
             return -1;
         }
+        std::cout << "Video capture opened successfully" << std::endl;
 
         int frameWidth = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
         int frameHeight = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
         double fps = cap.get(cv::CAP_PROP_FPS);
 
+        int targetWidth = 640;
+        int targetHeight = static_cast<int>(frameHeight * (targetWidth / static_cast<float>(frameWidth)));
+
+        std::cout << "Original resolution: " << frameWidth << "x" << frameHeight << std::endl;
+        std::cout << "Reduced resolution: " << targetWidth << "x" << targetHeight << std::endl;
+        std::cout << "Video FPS: " << fps << std::endl;
+
         cv::namedWindow("YOLOv5 Object Detection & Tracking", cv::WINDOW_NORMAL);
-        cv::resizeWindow("YOLOv5 Object Detection & Tracking", frameWidth, frameHeight);
+        cv::resizeWindow("YOLOv5 Object Detection & Tracking", targetWidth, targetHeight);
 
         auto startTime = std::chrono::high_resolution_clock::now();
         int frameCount = 0;
+        int processedFrames = 0;
 
-        cv::Mat frame;
+        std::cout << "Starting main processing loop..." << std::endl;
+        cv::Mat frame, resizedFrame;
         while (true)
         {
+            std::cout << "Reading frame " << processedFrames << "..." << std::endl;
+
             cap >> frame;
             if (frame.empty())
             {
+                std::cout << "End of video stream" << std::endl;
                 break;
             }
 
-            auto detections = detector.detect(frame);
+            cv::resize(frame, resizedFrame, cv::Size(targetWidth, targetHeight));
 
-            auto tracks = tracker.update(detections);
+            std::cout << "Detecting objects..." << std::endl;
+            auto detections = detector.detect(resizedFrame);
+            std::cout << "Detected " << detections.size() << " objects" << std::endl;
+
+            // std::cout << "Updating tracker..." << std::endl;
+            // auto tracks = tracker.update(detections);
+            // std::cout << "Tracking " << tracks.size() << " objects" << std::endl;
+
             
-            detector.draw_detections(frame, detections);
+            detector.draw_detections(resizedFrame, detections);
 
-            for (const auto& track : tracks)
-            {
-                auto bbox = track.current_bbox();
-                int trackId = track.id();
+            // for (const auto& track : tracks)
+            // {
+            //     auto bbox = track.current_bbox();
+            //     int trackId = track.id();
                 
-                // Only draw vehicles (car, motorcycle, bus, truck)
-                if (track.id() == 2 || track.id() == 3 || 
-                    track.id() == 5 || track.id() == 7) {
-                    // Draw bounding box
-                    rectangle(frame, bbox, cv::Scalar(0, 255, 255), 2);
+            //     // Only draw vehicles (car, motorcycle, bus, truck)
+            //     if (track.id() == 2 || track.id() == 3 || 
+            //         track.id() == 5 || track.id() == 7) {
+            //         // Draw bounding box
+            //         rectangle(resizedFrame, bbox, cv::Scalar(0, 255, 255), 2);
                     
-                    // Draw track ID
-                    std::string label = "ID: " + std::to_string(trackId);
-                    putText(frame, label, cv::Point(bbox.x, bbox.y - 10),
-                            cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 2);
-                }
-            }
+            //         // Draw track ID
+            //         std::string label = "ID: " + std::to_string(trackId);
+            //         putText(resizedFrame, label, cv::Point(bbox.x, bbox.y - 10),
+            //                 cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 2);
+            //     }
+            // }
 
             // Calculate and display FPS
             frameCount++;
@@ -108,18 +138,22 @@ int main(int argc, char** argv)
             {
                 double currentFps = frameCount / static_cast<double>(elapsedTime);
                 std::string fpsText = "FPS: " + std::to_string(currentFps).substr(0, 4);
-                putText(frame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+                putText(resizedFrame, fpsText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
                 
                 // Reset counters
                 frameCount = 0;
                 startTime = currentTime;
             }
 
-            imshow("YOLOv5 Object Detection & Tracking", frame);
+            std::cout << "Displaying frame..." << std::endl;
+            imshow("YOLOv5 Object Detection & Tracking", resizedFrame);
 
-            if (cv::waitKey(1) == 27) { // ESC key
+            if (cv::waitKey(1) == 27)
+            { // ESC key
                 break;
             }
+
+            processedFrames++;
         }
 
         cap.release();
@@ -130,5 +164,6 @@ int main(int argc, char** argv)
         return -1;
     }
     
+    std::cout << "Program completed successfully" << std::endl;
     return 0;
 }

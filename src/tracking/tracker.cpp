@@ -61,7 +61,7 @@ std::vector<Track> Tracker::update(const std::vector<Detection>& detections) noe
     // Update matched tracks
     for (size_t i = 0; i < assignment.size(); ++i)
     {
-        if (assignment[i] != -1)
+        if (assignment[i] != -1 && assignment[i] < detections.size())
         {
             tracks_[i]->update(detections[assignment[i]], current_time);
         } else 
@@ -153,7 +153,7 @@ void Tracker::associate_detections_to_tracks
     // Find matches based on assignment and cost threshold
     for (size_t i = 0; i < assignment.size(); ++i) {
         int j = assignment[i];
-        if (j != -1 && cost_matrix[i][j] < (1.0f - iou_threshold_)) {
+        if (j != -1 && j < detections.size() && cost_matrix[i][j] < (1.0f - iou_threshold_)) {
             // Valid assignment
             assignment[i] = j;
             // Remove from unmatched detections
