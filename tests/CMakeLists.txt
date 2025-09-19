@@ -53,47 +53,46 @@ target_link_libraries(KalmanTest PRIVATE
     ${OpenCV_LIBS}
 )
 
-# Track tests
-# add_executable(TrackTest 
-#     track_test/track_test.cpp
-#     ../src/tracking/track.cpp
-#     ../src/tracking/kalman_filter.cpp
-#     ../src/tracking/detection.cpp
-# )
-# target_include_directories(TrackTest PRIVATE 
-#     ../include 
-#     ${OpenCV_INCLUDE_DIRS}
-#     ${GTEST_INCLUDE_DIRS}
-# )
-# target_link_libraries(TrackTest PRIVATE 
-#     GTest::gtest
-#     GTest::gtest_main 
-#     ${OpenCV_LIBS}
-# )
+add_executable(HungarianTest 
+    hungarian_test/HungarianTest.cpp
+    ../src/tracking/hungarian.cpp
+)
+target_include_directories(HungarianTest PRIVATE 
+    ../include 
+    ${OpenCV_INCLUDE_DIRS}
+    ${GTEST_INCLUDE_DIRS}
+)
+target_link_libraries(HungarianTest PRIVATE 
+    GTest::gtest 
+    GTest::gtest_main 
+    ${OpenCV_LIBS}
+)
 
-# Hungarian tests
-# add_executable(HungarianTest 
-#     hungarian_test/hungarian_test.cpp
-#     ../src/tracking/hungarian.cpp
-# )
-# target_include_directories(HungarianTest PRIVATE 
-#     ../include 
-#     ${OpenCV_INCLUDE_DIRS}
-#     ${GTEST_INCLUDE_DIRS}
-# )
-# target_link_libraries(HungarianTest PRIVATE 
-#     GTest::gtest 
-#     GTest::gtest_main 
-#     ${OpenCV_LIBS}
-# )
+add_executable(TrackTest 
+    track_test/TrackTest.cpp
+    ../src/tracking/track.cpp
+    ../src/tracking/tracker.cpp
+    ../src/tracking/kalman_filter.cpp
+    ../src/tracking/detection.cpp
+    ../src/tracking/hungarian.cpp
+)
+target_include_directories(TrackTest PRIVATE 
+    ../include 
+    ${OpenCV_INCLUDE_DIRS}
+    ${GTEST_INCLUDE_DIRS}
+)
+target_link_libraries(TrackTest PRIVATE 
+    GTest::gtest
+    GTest::gtest_main 
+    ${OpenCV_LIBS}
+)
 
 # Add all tests to a custom target
 add_custom_target(run_all_tests
     COMMAND DetectionTest
     COMMAND KalmanTest
-    # COMMAND TrackTest
-    # COMMAND HungarianTest
-    # DEPENDS DetectionTest TrackTest HungarianTest KalmanTest
-    DEPENDS DetectionTest KalmanTest
+    COMMAND HungarianTest
+    COMMAND TrackTest
+    DEPENDS DetectionTest TrackTest HungarianTest KalmanTest
     COMMENT "Running tests..."
 )
