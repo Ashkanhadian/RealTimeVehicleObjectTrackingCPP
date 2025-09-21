@@ -1,14 +1,22 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
-project(RealTimeVehicleObjectTrackingCPP LANGUAGES CXX)
+project(RealTimeVehicleObjectTrackingCPP LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ==================================================
-# Find OpenCV with CUDA support
+# Path Configuration
 # ==================================================
+set(CUDA_TOOLKIT_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.8")
+set(CMAKE_CUDA_COMPILER "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc.exe")
+set(Torch_DIR "C:/libtorch-win-shared-with-deps-2.7.0+cu128/libtorch/share/cmake/Torch")
 set(OpenCV_DIR "C:/OpenCV-4.12.0/x64/vc17/lib")
+
+# ==================================================
+# Find Packages
+# ==================================================
+# Find OpenCV with CUDA support
 find_package(OpenCV REQUIRED COMPONENTS
     core
     highgui
@@ -22,6 +30,17 @@ find_package(OpenCV REQUIRED COMPONENTS
     cudawarping
 )
 
+# Create nvToolsExt target for nvtx3
+add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
+target_include_directories(CUDA::nvToolsExt INTERFACE "${CUDA_TOOLKIT_ROOT_DIR}/include")
+target_compile_definitions(CUDA::nvToolsExt INTERFACE TORCH_CUDA_USE_NVTX3)
+
+# Find LibTorch
+find_package(Torch REQUIRED)
+
+# ==================================================
+# Package Configuration
+# ==================================================
 if(OpenCV_FOUND)
     message(STATUS "OpenCV version: ${OpenCV_VERSION}")
     include_directories(${OpenCV_INCLUDE_DIRS})
@@ -31,7 +50,7 @@ if(OpenCV_FOUND)
         message(STATUS "CUDA support detected in OpenCV")
         add_definitions(-DHAVE_CUDA=1)
     else()
-        message(WARNING "OpenCV was compiled without CUDA support")
+        message(STATUS "OpenCV was compiled without CUDA support")
         add_definitions(-DHAVE_CUDA=0)
     endif()
 else()
@@ -57,6 +76,8 @@ add_executable(RealTimeVehicleObjectTrackingCPP
 target_include_directories(RealTimeVehicleObjectTrackingCPP PRIVATE
     include
     ${OpenCV_INCLUDE_DIRS}
+    ${TORCH_INCLUDE_DIRS}
+    "${CUDA_TOOLKIT_ROOT_DIR}/include"
 )
 
 # ==================================================
@@ -64,6 +85,8 @@ target_include_directories(RealTimeVehicleObjectTrackingCPP PRIVATE
 # ==================================================
 target_link_libraries(RealTimeVehicleObjectTrackingCPP PRIVATE
     ${OpenCV_LIBS}
+    ${TORCH_LIBRARIES}
+    CUDA::cudart
 )
 
 # ==================================================
@@ -72,7 +95,12 @@ target_link_libraries(RealTimeVehicleObjectTrackingCPP PRIVATE
 set_target_properties(RealTimeVehicleObjectTrackingCPP PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
 )
+
+# Set CUDA architecture
+set(CMAKE_CUDA_ARCHITECTURES "75")
 
 # ==================================================
 # Output Configuration
@@ -89,3 +117,5 @@ set_target_properties(RealTimeVehicleObjectTrackingCPP PROPERTIES
 message(STATUS "OpenCV Include Directory: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "OpenCV Libraries: ${OpenCV_LIBS}")
 message(STATUS "OpenCV CUDA Support: ${OpenCV_HAVE_CUDA}")
+message(STATUS "LibTorch libraries: ${TORCH_LIBRARIES}")
+message(STATUS "CUDA Include Path: ${CUDA_TOOLKIT_ROOT_DIR}/include")
