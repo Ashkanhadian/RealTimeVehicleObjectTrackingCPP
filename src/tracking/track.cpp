@@ -64,3 +64,18 @@ void Track::mark_missed() noexcept
 {
     return time_since_update_ > max_age_;
 }
+
+[[nodiscard]] bool Track::is_valid() const noexcept
+{
+    auto bbox = current_bbox();
+
+    // Check if bounding box is reasonable (not too small or too large)
+    bool valid_size = bbox.width > 10 && bbox.height > 10 &&
+                      bbox.width < 2000 && bbox.height < 2000;
+
+    // Check is bounding box position is reasonable
+    bool valid_position = bbox.x >= -100 && bbox.y >= -100 &&
+                          bbox.x < 5000 && bbox.y < 5000;
+
+    return valid_size && valid_position;
+}

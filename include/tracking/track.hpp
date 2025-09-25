@@ -37,6 +37,7 @@ class Track
         [[nodiscard]] cv::Rect_<float> current_bbox() const noexcept;
         [[nodiscard]] bool is_confirmed() const noexcept;
         [[nodiscard]] bool is_dead() const noexcept;
+        [[nodiscard]] bool is_valid() const noexcept;
 
         static int min_hits_;
         static int max_age_;

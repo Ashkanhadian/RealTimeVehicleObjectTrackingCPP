@@ -47,18 +47,18 @@ void KalmanFilter::setup_kalman_filter()
 
     // Process noise covariance (Q)
     kf_.processNoiseCov = cv::Mat::eye(state_size, state_size, CV_32F);
-    kf_.processNoiseCov.at<float>(4, 4) = 0.01f;
-    kf_.processNoiseCov.at<float>(5, 5) = 0.01f;
-    kf_.processNoiseCov.at<float>(6, 6) = 0.001f;
-    kf_.processNoiseCov.at<float>(7, 7) = 0.001f;
+    kf_.processNoiseCov.at<float>(4, 4) = 0.01f;    // vx
+    kf_.processNoiseCov.at<float>(5, 5) = 0.01f;    // vy
+    kf_.processNoiseCov.at<float>(6, 6) = 0.0001f;   // vw
+    kf_.processNoiseCov.at<float>(7, 7) = 0.0001f;   // vh
     kf_.processNoiseCov *= 1e-2;
 
     // Measurement noise covariance (R)
     kf_.measurementNoiseCov = cv::Mat::eye(measurement_size, measurement_size, CV_32F);
     kf_.measurementNoiseCov.at<float>(0, 0) = 0.1f;
     kf_.measurementNoiseCov.at<float>(1, 1) = 0.1f;
-    kf_.measurementNoiseCov.at<float>(2, 2) = 0.1f;
-    kf_.measurementNoiseCov.at<float>(3, 3) = 0.1f;
+    kf_.measurementNoiseCov.at<float>(2, 2) = 0.05f;
+    kf_.measurementNoiseCov.at<float>(3, 3) = 0.05f;
     kf_.measurementNoiseCov *= 1e-1;
 
     // State covariance (P)

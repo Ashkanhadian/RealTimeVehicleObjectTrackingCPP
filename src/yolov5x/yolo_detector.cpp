@@ -1,10 +1,9 @@
+#include "../../include/yolov5x/yolo_detector.hpp"
+#include "../../include/device_type.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <opencv2/cudaarithm.hpp>
-
-#include "../../include/yolov5x/yolo_detector.hpp"
-#include "../../include/device_type.hpp"
 
 YOLODetector::YOLODetector
 (

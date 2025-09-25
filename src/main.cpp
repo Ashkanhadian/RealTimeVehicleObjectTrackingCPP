@@ -1,11 +1,10 @@
+#include "../include/yolov5x/yolo_detector.hpp"
+#include "../include/tracking/tracker.hpp"
+#include "../include/device_type.hpp"
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <chrono>
 #include <memory>
-
-#include "../include/yolov5x/yolo_detector.hpp"
-#include "../include/tracking/tracker.hpp"
-#include "../include/device_type.hpp"
 
 int main(int argc, char** argv)
 {

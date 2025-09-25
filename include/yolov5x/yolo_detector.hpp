@@ -1,11 +1,10 @@
 #pragma once
 
+#include "../tracking/detection.hpp"
+#include "../device_type.hpp"
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
-
-#include "../tracking/detection.hpp"
-#include "../device_type.hpp"
 
 class YOLODetector
 {
