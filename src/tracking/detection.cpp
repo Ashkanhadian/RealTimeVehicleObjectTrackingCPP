@@ -100,14 +100,14 @@ void Detection::updateConfidence(float new_confidence) noexcept
     return cv::Rect_<float>(bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height);
 }
 
-[[nodiscard]] cv::Rect_<float> detection_utils::toXYWH
-(
-    const cv::Rect_<float>& bbox
-) noexcept
-{
-    // NOTE: This assumes the input bbox is in (x1, y1, x2, y2) format
-    return cv::Rect_<float>(bbox.x, bbox.y, bbox.width - bbox.x, bbox.height - bbox.y);
-}
+// [[nodiscard]] cv::Rect_<float> detection_utils::toXYWH
+// (
+//     const cv::Rect_<float>& bbox
+// ) noexcept
+// {
+//     // NOTE: This assumes the input bbox is in (x1, y1, x2, y2) format
+//     return cv::Rect_<float>(bbox.x, bbox.y, bbox.width - bbox.x, bbox.height - bbox.y);
+// }
 
 [[nodiscard]] cv::Mat detection_utils::createIoUCostMatrix
 (

@@ -1,8 +1,8 @@
 #include "tracking/track.hpp"
 #include <iostream>
 
-int Track::min_hits_ = 1;
-int Track::max_age_ = 5;
+int Track::min_hits_ = 3;
+int Track::max_age_ = 30;
 
 Track::Track
 (
@@ -17,6 +17,7 @@ Track::Track
       last_detection_(initial_detection),
       last_update_time_(timestamp)
 {
+    cv::randu(color_, 0, 255);
     kf_.init(initial_detection);
 }
 

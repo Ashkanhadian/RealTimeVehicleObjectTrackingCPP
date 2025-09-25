@@ -35,7 +35,7 @@ namespace detection_utils
     [[nodiscard]] float calculateDistance(const cv::Point2f& point1, const cv::Point2f& point2) noexcept;
 
     [[nodiscard]] cv::Rect_<float> toX1Y1X2Y2(const cv::Rect_<float>& bbox) noexcept;
-    [[nodiscard]] cv::Rect_<float> toXYWH(const cv::Rect_<float>& bbox) noexcept;
+    // [[nodiscard]] cv::Rect_<float> toXYWH(const cv::Rect_<float>& bbox) noexcept;
 
     [[nodiscard]] cv::Mat createIoUCostMatrix
     (

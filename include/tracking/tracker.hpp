@@ -4,6 +4,7 @@
 #include "hungarian.hpp"
 #include "detection.hpp"
 
+#include <opencv2/opencv.hpp>
 #include <vector>
 #include <memory>
 #include <chrono>

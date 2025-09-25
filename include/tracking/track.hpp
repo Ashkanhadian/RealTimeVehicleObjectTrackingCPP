@@ -2,6 +2,7 @@
 
 #include "kalman_filter.hpp"
 #include "detection.hpp"
+#include <opencv2/opencv.hpp>
 #include <chrono>
 
 class Track
@@ -11,6 +12,7 @@ class Track
         int hits_;
         int age_;
         int time_since_update_;
+        cv::Vec3i color_;
         Detection last_detection_;
         KalmanFilter kf_;
         std::chrono::steady_clock::time_point last_update_time_;
@@ -29,6 +31,7 @@ class Track
         [[nodiscard]] int hits() const noexcept { return hits_; }
         [[nodiscard]] int age() const noexcept { return age_; }
         [[nodiscard]] int time_since_update() const noexcept { return time_since_update_; }
+        [[nodiscard]] cv::Vec3i color() const noexcept { return color_; }
         [[nodiscard]] Detection last_detection() const noexcept {return last_detection_; }
         [[nodiscard]] cv::Rect_<float> predicted_bbox() const noexcept;
         [[nodiscard]] cv::Rect_<float> current_bbox() const noexcept;

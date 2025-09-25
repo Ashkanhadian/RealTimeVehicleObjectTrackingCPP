@@ -71,10 +71,10 @@ std::vector<Track> Tracker::update(const std::vector<Detection>& detections) noe
 
     auto cost_matrix = create_cost_matrix(detections, tracks_);
 
-    std::cout << "Cost matrix size: " << cost_matrix.size() << "x" 
-              << (cost_matrix.empty() ? 0 : cost_matrix[0].size()) << std::endl;
-    std::cout << "Tracks count: " << tracks_.size() << std::endl;
-    std::cout << "Detections count: " << detections.size() << std::endl;
+    // std::cout << "Cost matrix size: " << cost_matrix.size() << "x" 
+    //           << (cost_matrix.empty() ? 0 : cost_matrix[0].size()) << std::endl;
+    // std::cout << "Tracks count: " << tracks_.size() << std::endl;
+    // std::cout << "Detections count: " << detections.size() << std::endl;
 
     // Solve assignment problem
     std::vector<int> assignment;
@@ -106,7 +106,7 @@ std::vector<Track> Tracker::update(const std::vector<Detection>& detections) noe
             unmatched_tracks
         );
 
-        std::cout << "Assignment result size: " << assignment.size() << std::endl;
+        // std::cout << "Assignment result size: " << assignment.size() << std::endl;
     } else
     {
         // All detections are unmatched if no tracks exist
@@ -174,7 +174,7 @@ std::vector<std::vector<float>> Tracker::create_cost_matrix
         for (size_t j = 0; j < detections.size(); ++j)
         {
             // Using 1 - IoU as cost (lower cost means better match)
-            float iou = 1.0f - detection_utils::calculateIoU
+            float iou = detection_utils::calculateIoU
             (
                 tracks[i]->predicted_bbox(),
                 detections[j].getBbox()
@@ -211,7 +211,7 @@ void Tracker::associate_detections_to_tracks
 
         if (j != -1 && 
             j < detections.size() && 
-            cost_matrix[i][j] < (1.0f - iou_threshold_))
+            cost_matrix[i][j] <= iou_threshold_)
         {
             // Valid assignment - remove from unmatched detections
             auto it = std::find(unmatched_detections.begin(), unmatched_detections.end(), j);

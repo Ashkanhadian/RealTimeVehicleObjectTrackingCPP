@@ -97,12 +97,7 @@ std::vector<Detection> YOLODetector::parse_detections
     std::vector<int> class_ids;
     std::vector<float> confidences;
     std::vector<cv::Rect> boxes;
-    
-    // Resizing factor
-    // float x_factor = 1.0f;
-    // float y_factor = 1.0f;
-    
-    // Get output dimensions
+
     const auto& dimensions = outputs[0].size;
     if (dimensions.dims() < 3) {
         std::cerr << "Unexpected output dimensions: " << dimensions << std::endl;
@@ -180,7 +175,7 @@ std::vector<Detection> YOLODetector::detect(cv::Mat& frame)
         // Create blob from image
         cv::Mat blob;
         cv::dnn::blobFromImage(input_image, blob, 1./255., 
-                              cv::Size(input_width_, input_height_), 
+                              cv::Size(640, 640), 
                               cv::Scalar(), true, false);
         
         net_.setInput(blob);
@@ -209,13 +204,13 @@ void YOLODetector::draw_detections
         
         // Only draw vehicles (car, motorcycle, bus, truck)
         if (classId == 2 || classId == 3 || classId == 5 || classId == 7) {
-            cv::rectangle(frame, box, cv::Scalar(0, 255, 0), 2);
+            cv::rectangle(frame, box, cv::Scalar(0, 128, 128), 2);
             
             std::string label = classes_[classId] + ": " + 
                                std::to_string(confidence).substr(0, 4);
             
             cv::putText(frame, label, cv::Point(box.x, box.y - 5),
-                       cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+                       cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 128, 128), 1);
         }
     }
 }

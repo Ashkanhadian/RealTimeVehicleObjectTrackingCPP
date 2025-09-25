@@ -14,10 +14,9 @@ class YOLODetector
         std::vector<std::string> classes_;
         float conf_threshold_;
         float nms_threshold_;
+        int input_width_;
+        int input_height_;
         DeviceType device_type_;
-        
-        const int input_width_ = 640;
-        const int input_height_ = 640;
         
         [[nodiscard]] cv::Mat format_yolov5(const cv::Mat& source) noexcept;
         [[nodiscard]] std::vector<Detection> parse_detections
@@ -29,9 +28,10 @@ class YOLODetector
 
     public:
         YOLODetector(const std::string& model_path, 
-                    DeviceType device_type = DeviceType::CPU,
-                    float conf_threshold = 0.5f,
-                    float nms_threshold = 0.4f);
+                     DeviceType device_type = DeviceType::CPU,
+                     float conf_threshold = 0.5f,
+                     float nms_threshold = 0.4f
+                );
         
         [[nodiscard]] std::vector<Detection> detect(cv::Mat& frame);
         void draw_detections(cv::Mat& frame, const std::vector<Detection>& detections) noexcept;
