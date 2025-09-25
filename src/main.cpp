@@ -62,6 +62,7 @@ int main(int argc, char** argv)
 
         int targetWidth = 1280;
         int targetHeight = static_cast<int>(frameHeight * (targetWidth / static_cast<float>(frameWidth)));
+        // int targetHeight = 640;
 
         std::cout << "Original resolution: " << frameWidth << "x" << frameHeight << std::endl;
         std::cout << "Target resolution: " << targetWidth << "x" << targetHeight << std::endl;
@@ -83,27 +84,40 @@ int main(int argc, char** argv)
                 break;
             }
 
-            // Calculate scale factors for display
-            float scaleX = targetWidth / static_cast<float>(frame.cols);
-            float scaleY = targetHeight / static_cast<float>(frame.rows);
-
             cv::resize(frame, resizedFrame, cv::Size(targetWidth, targetHeight));
 
-            auto detections = detector.detect(resizedFrame);
-
-            auto tracks = tracker.update(detections);
-            
-            // detector.draw_detections(resizedFrame, detections);
+            cv::Mat detectionFrame;
+            cv::resize(frame, detectionFrame, cv::Size(640, 640));
+    
+            auto detections = detector.detect(detectionFrame);
 
             std::vector<Detection> scaledDetections;
+
+            float scaleX_640_to_orig = frame.cols / 640.0f;
+            float scaleY_640_to_orig = frame.rows / 640.0f;
+
+            float scaleX_orig_to_display = targetWidth / static_cast<float>(frame.cols);
+            float scaleY_orig_to_display = targetHeight / static_cast<float>(frame.rows);
+
+            float scaleX = scaleX_640_to_orig * scaleX_orig_to_display;
+            float scaleY = scaleY_640_to_orig * scaleY_orig_to_display;
+
             for (const auto& det : detections)
             {
                 auto bbox = det.getBbox();
-                cv::Rect_<float> scaledBbox(bbox.x * scaleX, bbox.y * scaleY, bbox.width * scaleX, bbox.height * scaleY);
+                cv::Rect_<float> scaledBbox
+                (
+                    bbox.x * scaleX,
+                    bbox.y * scaleY,
+                    bbox.width * scaleX,
+                    bbox.height * scaleY
+                );
                 scaledDetections.emplace_back(det.getClassId(), det.getConfidence(), scaledBbox);
             }
 
-            detector.draw_detections(resizedFrame, detections);
+            auto tracks = tracker.update(scaledDetections);
+            
+            detector.draw_detections(resizedFrame, scaledDetections);
 
             std::cout << "Detections: " << detections.size() << ", Tracks: " << tracks.size() << std::endl;
 
