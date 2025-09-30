@@ -2,7 +2,7 @@
 #include <iostream>
 
 int Track::min_hits_ = 3;
-int Track::max_age_ = 30;
+int Track::max_age_ = 5;
 
 Track::Track
 (
