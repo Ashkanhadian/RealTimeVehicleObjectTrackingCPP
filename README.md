@@ -2,6 +2,8 @@
 
 C++ implementation of object detection using YOLO with Kalman filtering and Hungarian algorithm for multi-object tracking.
 
+![Demo](.data/demo.webp)
+
 # Features
 
 - YOLOv5 Object Detection: Leverages ONNX model for fast and accurate vehicle detection
