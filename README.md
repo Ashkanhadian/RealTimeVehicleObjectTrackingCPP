@@ -1,8 +1,8 @@
 # RealTimeVehicleObjectTrackingCPP
 
-C++ implementation of object detection using YOLO with Kalman filtering and Hungarian algorithm for multi-object tracking.
+![Demo Video](./data/demo.webp)
 
-![Demo](.data/demo.webp)
+C++ implementation of object detection using YOLO with Kalman filtering and Hungarian algorithm for multi-object tracking.
 
 # Features
 
