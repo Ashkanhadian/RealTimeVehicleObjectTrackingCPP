@@ -12,9 +12,9 @@ int main(int argc, char** argv)
     cv::String modelPath = "../models/yolov5x.onnx"; // Default model path
     cv::String videoPath = "../data/vecteezy_out-of-focus-street-traffic-high-angle-view.mov";
     DeviceType deviceType = DeviceType::CPU; // Default to CPU
-    float confThreshold = 0.5f;
-    float nmsThreshold = 0.4f;
-    float iouThreshold = 0.3f;
+    float confThreshold = 0.4f;
+    float nmsThreshold = 0.3f;
+    float iouThreshold = 0.4f;
 
     if (argc > 1)
     {
@@ -61,11 +61,21 @@ int main(int argc, char** argv)
 
         int targetWidth = 1280;
         int targetHeight = static_cast<int>(frameHeight * (targetWidth / static_cast<float>(frameWidth)));
-        // int targetHeight = 640;
 
         std::cout << "Original resolution: " << frameWidth << "x" << frameHeight << std::endl;
         std::cout << "Target resolution: " << targetWidth << "x" << targetHeight << std::endl;
         std::cout << "Video FPS: " << fps << std::endl;
+
+        cv::String outputVideoPath = "../data/out.mp4";
+        cv::VideoWriter videoWriter;
+        int codec = cv::VideoWriter::fourcc('m', 'p', '4', 'v'); // MP4 codec
+        videoWriter.open(outputVideoPath, codec, fps, cv::Size(targetWidth, targetHeight));
+
+        if (!videoWriter.isOpened())
+        {
+            std::cerr << "Error: Could not open video writer for: " << outputVideoPath << std::endl;
+            return -1;
+        }
 
         cv::namedWindow("YOLOv5 Object Detection & Tracking", cv::WINDOW_NORMAL);
         cv::resizeWindow("YOLOv5 Object Detection & Tracking", targetWidth, targetHeight);
@@ -119,18 +129,28 @@ int main(int argc, char** argv)
             detector.draw_detections(resizedFrame, scaledDetections);
 
             std::cout << "Detections: " << detections.size() << ", Tracks: " << tracks.size() << std::endl;
+            
+            int vehicle_count = tracker.next_id();
 
             for (const auto& track : tracks)
             {
                 auto bbox = track.current_bbox();
                 int trackId = track.id();
 
+                cv::Point2f center(bbox.x + bbox.width / 2, bbox.y + bbox.height / 2);
+                cv::circle(resizedFrame, center, 5, track.color(), -1);
+
                 rectangle(resizedFrame, bbox, track.color(), 2);
                 
                 std::string label = "ID: " + std::to_string(trackId);
-                putText(resizedFrame, label, cv::Point(bbox.x, bbox.y - 10),
+                putText(resizedFrame, label, cv::Point(bbox.x, bbox.y + bbox.height + 30),
                         cv::FONT_HERSHEY_SIMPLEX, 0.7, track.color(), 2);
             }
+            
+            std::string count_text = "Total Vehicles: " + std::to_string(vehicle_count);
+
+            cv::putText(resizedFrame, count_text,
+                        cv::Point(10, 40), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(123, 104, 238), 2);
 
             // Calculate and display FPS
             frameCount++;
@@ -142,11 +162,13 @@ int main(int argc, char** argv)
             {
                 double currentFps = frameCount / static_cast<double>(elapsedTime);
                 std::string fpsText = "FPS: " + std::to_string(currentFps).substr(0, 4);
-                putText(resizedFrame, fpsText, cv::Point(5, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(123, 104, 238), 2);
+                putText(resizedFrame, fpsText, cv::Point(10, 80), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(123, 104, 238), 2);
             
                 frameCount = 0;
                 startTime = currentTime;
             }
+
+            videoWriter.write(resizedFrame);
 
             imshow("YOLOv5 Object Detection & Tracking", resizedFrame);
 
@@ -156,7 +178,11 @@ int main(int argc, char** argv)
             }
         }
 
+        std::cout << "Final vehicle count: " << tracker.next_id() << std::endl;
+        std::cout << "Output video saved to: " << outputVideoPath << std::endl;
+
         cap.release();
+        videoWriter.release();
         cv::destroyAllWindows();
     } catch (const std::exception& e)
     {
